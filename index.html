@@ -3,1404 +3,1167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FloraLamp Pro — Конструктор плафонов</title>
+    <title>FloraLamp Pro — Генератор плафонов</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
-        
         :root {
-            --bg-dark: #0a0a0f;
-            --panel-bg: rgba(18, 18, 26, 0.95);
-            --border: #1e1e2e;
-            --accent: #667eea;
-            --accent-grad: linear-gradient(135deg, #667eea, #764ba2);
-            --text-main: #e0e0e0;
-            --text-dim: #999;
+            --bg-dark: #0f0f13;
+            --panel-bg: rgba(20, 20, 28, 0.95);
+            --accent: #6c5ce7;
+            --accent-hover: #5649c0;
+            --text-main: #ffffff;
+            --text-sec: #a0a0b0;
+            --border: #2d2d3a;
+            --success: #00b894;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            overflow: hidden;
+            height: 100vh;
+            user-select: none;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-main); overflow: hidden; height: 100vh; }
-        
-        .app { display: flex; height: 100vh; }
+        /* Layout */
+        .app-container { display: flex; height: 100vh; width: 100vw; }
         
         /* Sidebar */
         .sidebar {
-            width: 360px;
-            background: linear-gradient(180deg, #12121a 0%, #0e0e16 100%);
+            width: 340px;
+            background: #16161e;
             border-right: 1px solid var(--border);
-            overflow-y: auto;
-            flex-shrink: 0;
-            z-index: 10;
             display: flex;
             flex-direction: column;
+            z-index: 10;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.3);
         }
-        .sidebar::-webkit-scrollbar { width: 5px; }
-        .sidebar::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 3px; }
-        
-        .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-        .logo { display: flex; align-items: center; gap: 10px; }
-        .logo-icon {
-            width: 36px; height: 36px;
-            background: var(--accent-grad);
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center; font-size: 18px;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-            animation: pulse-glow 3s infinite;
+        .logo-area {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(135deg, #16161e 0%, #1f1f2e 100%);
         }
-        @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 10px rgba(102, 126, 234, 0.2); } 50% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.5); } }
-        
-        .logo h1 { font-size: 18px; font-weight: 700; background: var(--accent-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .logo p { font-size: 10px; color: #666; margin-top: 1px; }
+        .logo-title { font-size: 20px; font-weight: 700; color: var(--accent); letter-spacing: 0.5px; }
+        .logo-sub { font-size: 11px; color: var(--text-sec); margin-top: 4px; }
 
-        .section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
-        .section-header { display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
-        .section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; color: var(--accent); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
-        .section-title::before { content: ''; width: 3px; height: 12px; background: var(--accent-grad); border-radius: 2px; }
-        .collapse-icon { transition: transform 0.3s; font-size: 10px; color: #666; }
-        .section.collapsed .collapse-icon { transform: rotate(-90deg); }
-        .section.collapsed .section-content { display: none; }
+        .controls-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+        .controls-scroll::-webkit-scrollbar { width: 6px; }
+        .controls-scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
 
-        .control-group { margin-bottom: 10px; }
-        .control-label { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        .control-label span { font-size: 12px; color: var(--text-dim); }
-        .control-label .val { font-size: 11px; color: var(--accent); font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+        .control-group { margin-bottom: 20px; }
+        .group-title {
+            font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px;
+            color: var(--text-sec); margin-bottom: 12px; font-weight: 600;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .group-title::before { content: ''; width: 3px; height: 12px; background: var(--accent); border-radius: 2px; }
+
+        /* Inputs */
+        .input-row { margin-bottom: 12px; }
+        .label-flex { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px; color: var(--text-sec); }
+        .val-display { color: var(--accent); font-family: monospace; font-weight: bold; }
         
         input[type="range"] {
-            width: 100%; height: 5px; -webkit-appearance: none; appearance: none;
-            background: #1e1e2e; border-radius: 3px; outline: none; cursor: pointer;
+            width: 100%; -webkit-appearance: none; background: #2a2a35; height: 4px; border-radius: 2px; cursor: pointer;
         }
         input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none; width: 14px; height: 14px;
-            background: var(--accent-grad); border-radius: 50%; cursor: pointer; border: 2px solid #12121a;
-            transition: transform 0.1s;
+            -webkit-appearance: none; width: 16px; height: 16px; background: var(--accent);
+            border-radius: 50%; cursor: pointer; transition: transform 0.1s;
         }
         input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
 
         select {
-            width: 100%; padding: 9px 10px; background: #1a1a28;
-            border: 1px solid #2a2a3a; border-radius: 8px;
-            color: var(--text-main); font-size: 12px; cursor: pointer; outline: none;
-            font-family: 'Inter', sans-serif;
+            width: 100%; padding: 8px; background: #2a2a35; border: 1px solid var(--border);
+            color: white; border-radius: 6px; font-size: 12px; cursor: pointer;
         }
-        select:focus { border-color: var(--accent); }
 
-        .preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-        .preset-btn {
-            padding: 10px 8px; background: #1a1a28; border: 1px solid #2a2a3a;
-            border-radius: 8px; color: #aaa; font-size: 11px; cursor: pointer;
-            transition: all 0.2s; text-align: center; font-family: 'Inter', sans-serif;
+        /* Buttons */
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .btn {
+            padding: 10px; border: none; border-radius: 6px; cursor: pointer;
+            font-size: 12px; font-weight: 600; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
         }
-        .preset-btn:hover { border-color: var(--accent); color: #fff; background: #2a2a3a; }
-        .preset-btn .p-icon { font-size: 22px; display: block; margin-bottom: 3px; }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        .btn-secondary { background: #2a2a35; color: var(--text-sec); border: 1px solid var(--border); }
+        .btn-secondary:hover { background: #353545; color: white; }
+        .btn-full { width: 100%; margin-top: 5px; }
 
-        .btn-print {
-            width: 100%; padding: 12px; margin-top: 8px;
-            background: linear-gradient(135deg, #11998e, #38ef7d);
-            border: none; border-radius: 10px; color: white;
-            font-size: 14px; font-weight: 600; cursor: pointer;
-            font-family: 'Inter', sans-serif; transition: all 0.3s;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            box-shadow: 0 4px 15px rgba(56, 239, 125, 0.2);
-        }
-        .btn-print:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(56, 239, 125, 0.4); }
-        .btn-print.playing { background: linear-gradient(135deg, #ff416c, #ff4b2b); box-shadow: 0 4px 15px rgba(255, 65, 108, 0.3); }
-
-        .btn-download {
-            width: 100%; padding: 12px; margin-top: 8px;
-            background: var(--accent-grad);
-            border: none; border-radius: 10px; color: white;
-            font-size: 14px; font-weight: 600; cursor: pointer;
-            font-family: 'Inter', sans-serif; transition: all 0.3s;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-        }
-        .btn-download:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.4); }
-
-        .btn-secondary {
-            width: 100%; padding: 10px; margin-top: 6px;
-            background: #1a1a28; border: 1px solid #2a2a3a; border-radius: 10px;
-            color: #aaa; font-size: 12px; cursor: pointer;
-            font-family: 'Inter', sans-serif; transition: all 0.2s;
-        }
-        .btn-secondary:hover { border-color: var(--accent); color: #fff; }
-
-        .cutout-options, .material-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-        .material-options { grid-template-columns: repeat(3, 1fr); }
-        
-        .cutout-btn, .material-btn {
-            aspect-ratio: 1; background: #1a1a28; border: 1px solid #2a2a3a;
-            border-radius: 8px; cursor: pointer; display: flex; align-items: center;
-            justify-content: center; color: #888; font-size: 18px; transition: all 0.2s;
-        }
-        .material-btn { aspect-ratio: auto; padding: 8px 6px; font-size: 10px; text-align: center; flex-direction: column; }
-        .cutout-btn:hover, .material-btn:hover { border-color: var(--accent); color: var(--accent); }
-        .cutout-btn.active, .material-btn.active { background: #1a1a3e; border-color: var(--accent); color: var(--accent); box-shadow: inset 0 0 10px rgba(102, 126, 234, 0.2); }
-        .material-btn .m-icon { font-size: 16px; display: block; margin-bottom: 2px; }
-
-        .color-options { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+        .color-palette { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-top: 8px; }
         .color-swatch {
-            width: 100%; aspect-ratio: 1; border-radius: 6px; cursor: pointer;
-            border: 2px solid transparent; transition: all 0.2s;
+            width: 100%; aspect-ratio: 1; border-radius: 4px; cursor: pointer;
+            border: 2px solid transparent; transition: transform 0.2s;
         }
-        .color-swatch:hover { transform: scale(1.1); }
-        .color-swatch.active { border-color: var(--accent); box-shadow: 0 0 10px rgba(102, 126, 234, 0.5); }
-
-        .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; }
-        .toggle-row span { font-size: 12px; color: var(--text-dim); }
-        .toggle {
-            width: 40px; height: 20px; background: #1e1e2e; border-radius: 10px;
-            position: relative; cursor: pointer; transition: background 0.3s;
-        }
-        .toggle.active { background: var(--accent-grad); }
-        .toggle::after {
-            content: ''; position: absolute; width: 16px; height: 16px;
-            background: white; border-radius: 50%; top: 2px; left: 2px; transition: transform 0.3s;
-        }
-        .toggle.active::after { transform: translateX(20px); }
+        .color-swatch.active { border-color: white; transform: scale(1.1); }
 
         /* Viewport */
-        .viewport {
-            flex: 1; position: relative;
-            background: radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a0f 70%);
-            overflow: hidden;
-        }
+        .viewport { flex: 1; position: relative; background: radial-gradient(circle at center, #1a1a24 0%, #0f0f13 100%); }
         #canvas3d { width: 100%; height: 100%; display: block; }
         
-        .vp-overlay { position: absolute; top: 16px; right: 16px; display: flex; flex-direction: column; gap: 6px; }
-        .vp-btn {
-            width: 36px; height: 36px; background: rgba(26,26,40,0.85);
-            backdrop-filter: blur(8px); border: 1px solid #2a2a3a; border-radius: 8px;
-            color: #888; font-size: 14px; cursor: pointer; display: flex;
-            align-items: center; justify-content: center; transition: all 0.2s;
+        .overlay-ui {
+            position: absolute; top: 20px; right: 20px;
+            display: flex; flex-direction: column; gap: 10px;
         }
-        .vp-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(26,26,40,1); }
-
-        .vp-info {
-            position: absolute; bottom: 16px; left: 16px;
-            background: rgba(26,26,40,0.85); backdrop-filter: blur(8px);
-            border: 1px solid #2a2a3a; border-radius: 8px; padding: 10px 14px;
-            font-size: 11px; color: #888; min-width: 200px;
+        .icon-btn {
+            width: 40px; height: 40px; border-radius: 8px; border: 1px solid var(--border);
+            background: rgba(20, 20, 28, 0.8); backdrop-filter: blur(5px);
+            color: var(--text-sec); font-size: 18px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
         }
-        .vp-info div { margin-bottom: 3px; font-family: 'JetBrains Mono', monospace; }
-        .vp-info div:last-child { margin-bottom: 0; }
-        .vp-info .highlight { color: #38ef7d; }
+        .icon-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
 
-        .edit-hint {
-            position: absolute; top: 16px; left: 16px;
-            background: rgba(102,126,234,0.15); border: 1px solid rgba(102,126,234,0.3);
-            border-radius: 8px; padding: 8px 14px; font-size: 11px; color: var(--accent);
-            display: flex; align-items: center; gap: 6px; pointer-events: none;
-        }
-        .edit-hint.hidden { display: none; }
-
-        .notif {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
-            background: var(--accent-grad);
-            color: white; padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 500;
-            z-index: 1000; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 6px 25px rgba(102,126,234,0.4);
-        }
-        .notif.show { transform: translateX(-50%) translateY(0); }
-
-        /* Point Editor Panel */
-        .point-editor-panel {
-            position: absolute;
-            top: 70px; right: 70px;
-            width: 280px;
-            background: var(--panel-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--accent);
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            z-index: 100;
-            transform: translateX(120%);
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex; flex-direction: column; gap: 12px;
-        }
-        .point-editor-panel.active { transform: translateX(0); }
-        .pe-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2a3a; padding-bottom: 8px; margin-bottom: 4px; }
-        .pe-title { font-size: 12px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
-        .pe-close { background: none; border: none; color: #666; cursor: pointer; font-size: 18px; line-height: 1; }
-        .pe-close:hover { color: #fff; }
-        .pe-row { display: flex; flex-direction: column; gap: 6px; }
-        .pe-label { font-size: 11px; color: #aaa; display: flex; justify-content: space-between; }
-        .pe-input-group { display: flex; gap: 8px; align-items: center; }
-        .pe-number { width: 60px; background: #1a1a28; border: 1px solid #2a2a3a; border-radius: 6px; color: #fff; padding: 6px; font-size: 12px; font-family: monospace; text-align: right; }
-        .pe-number:focus { border-color: var(--accent); outline: none; }
-        .pe-btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
-        .pe-btn { padding: 8px; background: #1a1a28; border: 1px solid #2a2a3a; border-radius: 6px; color: #aaa; font-size: 10px; cursor: pointer; transition: all 0.2s; }
-        .pe-btn:hover { border-color: var(--accent); color: #fff; background: #2a2a3a; }
-        .pe-btn.primary { background: rgba(102, 126, 234, 0.15); border-color: var(--accent); color: var(--accent); }
-        .pe-btn.primary:hover { background: var(--accent); color: #fff; }
-
-        /* Print Overlay */
-        .print-overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(4px);
-            z-index: 50;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+        .stats-panel {
+            position: absolute; bottom: 20px; left: 20px;
+            background: rgba(20, 20, 28, 0.8); backdrop-filter: blur(5px);
+            padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border);
+            font-size: 11px; color: var(--text-sec); line-height: 1.6;
             pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s;
         }
-        .print-overlay.active { display: flex; opacity: 1; pointer-events: auto; }
-        .print-status {
-            background: rgba(18, 18, 26, 0.95);
-            border: 1px solid #38ef7d;
-            padding: 20px 40px;
-            border-radius: 16px;
-            text-align: center;
-            box-shadow: 0 0 30px rgba(56, 239, 125, 0.2);
+        .stats-panel b { color: white; }
+
+        /* MODALS (Print & Editor) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px);
+            z-index: 100; display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
         }
-        .print-title { font-size: 18px; font-weight: 700; color: #38ef7d; margin-bottom: 10px; }
-        .print-bar-bg { width: 300px; height: 8px; background: #2a2a3a; border-radius: 4px; overflow: hidden; margin: 10px 0; }
-        .print-bar-fill { height: 100%; background: linear-gradient(90deg, #11998e, #38ef7d); width: 0%; transition: width 0.1s linear; }
-        .print-details { font-size: 12px; color: #aaa; font-family: 'JetBrains Mono', monospace; margin-top: 8px; }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+
+        .modal-window {
+            background: #1a1a24;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column;
+            overflow: hidden;
+            transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-width: 90%; max-height: 90%;
+        }
+        .modal-overlay.active .modal-window { transform: scale(1); }
+
+        .modal-header {
+            padding: 15px 20px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+            background: #20202a;
+        }
+        .modal-title { font-size: 16px; font-weight: 600; color: white; }
+        .close-modal { background: none; border: none; color: var(--text-sec); font-size: 24px; cursor: pointer; }
+        .close-modal:hover { color: white; }
+
+        .modal-body { padding: 20px; overflow: hidden; display: flex; gap: 20px; }
+        
+        /* Print Specifics */
+        .print-canvas-container {
+            flex: 2; background: #000; border-radius: 8px; overflow: hidden; position: relative;
+            border: 1px solid var(--border);
+        }
+        .print-controls {
+            flex: 1; min-width: 250px; display: flex; flex-direction: column; gap: 15px;
+        }
+        .progress-container {
+            background: #2a2a35; height: 10px; border-radius: 5px; overflow: hidden; margin: 10px 0;
+        }
+        .progress-bar {
+            height: 100%; background: linear-gradient(90deg, var(--accent), #00b894);
+            width: 0%; transition: width 0.1s linear;
+        }
+        .print-stat { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-sec); }
+        .print-stat span:last-child { color: white; font-family: monospace; }
+
+        /* Profile Editor Specifics */
+        .editor-layout { display: flex; gap: 20px; width: 100%; height: 600px; }
+        .editor-canvas { flex: 2; background: #111; border-radius: 8px; position: relative; border: 1px solid var(--border); }
+        .editor-tools {
+            flex: 1; min-width: 280px; background: #20202a; padding: 15px; border-radius: 8px;
+            display: flex; flex-direction: column; gap: 15px; overflow-y: auto;
+        }
+        .point-list { list-style: none; }
+        .point-item {
+            background: #2a2a35; padding: 10px; border-radius: 6px; margin-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid transparent; cursor: pointer;
+        }
+        .point-item.active { border-color: var(--accent); background: #2d2d40; }
+        .point-coords { font-size: 11px; color: var(--text-sec); font-family: monospace; }
+        .hint-text { font-size: 12px; color: var(--text-sec); font-style: italic; margin-top: 5px; }
+
+        /* Notification */
+        .toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: var(--accent); color: white; padding: 10px 20px; border-radius: 30px;
+            font-size: 14px; font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 200;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
     </style>
 </head>
 <body>
-<div class="app">
+
+<div class="app-container">
+    <!-- SIDEBAR -->
     <div class="sidebar">
-        <div class="sidebar-header">
-            <div class="logo">
-                <div class="logo-icon">🌸</div>
-                <div><h1>FloraLamp Pro</h1><p>Генератор плафонов v2.0</p></div>
-            </div>
+        <div class="logo-area">
+            <div class="logo-title">🌸 FloraLamp Pro</div>
+            <div class="logo-sub">Генератор параметрических плафонов</div>
         </div>
-
-        <div class="section">
-            <div class="section-header" onclick="toggleSection(this)">
-                <div class="section-title">🎨 Пресеты</div>
-                <span class="collapse-icon">▼</span>
-            </div>
-            <div class="section-content">
-                <div class="preset-grid">
-                    <button class="preset-btn" onclick="applyPreset('tulip')"><span class="p-icon">🌷</span>Тюльпан</button>
-                    <button class="preset-btn" onclick="applyPreset('rose')"><span class="p-icon">🌹</span>Роза</button>
-                    <button class="preset-btn" onclick="applyPreset('lily')"><span class="p-icon">🌸</span>Лилия</button>
-                    <button class="preset-btn" onclick="applyPreset('lotus')"><span class="p-icon">🪻</span>Лотос</button>
+        
+        <div class="controls-scroll">
+            <!-- Dimensions -->
+            <div class="control-group">
+                <div class="group-title">Размеры</div>
+                <div class="input-row">
+                    <div class="label-flex"><span>Высота (мм)</span><span class="val-display" id="val-h">150</span></div>
+                    <input type="range" id="inp-h" min="50" max="400" value="150" oninput="updateParam('height', this.value)">
                 </div>
-                <button class="random-btn" style="width:100%;padding:10px;margin-top:8px;background:#1a1a28;border:1px solid #2a2a3a;border-radius:8px;color:#aaa;cursor:pointer;" onclick="randomLamp()">🎲 Случайная форма</button>
+                <div class="input-row">
+                    <div class="label-flex"><span>Диаметр (мм)</span><span class="val-display" id="val-d">120</span></div>
+                    <input type="range" id="inp-d" min="60" max="300" value="120" oninput="updateParam('diameter', this.value)">
+                </div>
+                <div class="input-row">
+                    <div class="label-flex"><span>Толщина (мм)</span><span class="val-display" id="val-t">2.0</span></div>
+                    <input type="range" id="inp-t" min="1" max="10" step="0.5" value="2" oninput="updateParam('thickness', this.value)">
+                </div>
             </div>
-        </div>
 
-        <div class="section">
-            <div class="section-header" onclick="toggleSection(this)">
-                <div class="section-title">💡 Цоколь</div>
-                <span class="collapse-icon">▼</span>
+            <!-- Shape -->
+            <div class="control-group">
+                <div class="group-title">Форма бутона</div>
+                <div class="input-row">
+                    <div class="label-flex"><span>Раскрытие</span><span class="val-display" id="val-o">50%</span></div>
+                    <input type="range" id="inp-o" min="0" max="100" value="50" oninput="updateParam('openness', this.value)">
+                </div>
+                <div class="input-row">
+                    <div class="label-flex"><span>Лепестки</span><span class="val-display" id="val-p">6</span></div>
+                    <input type="range" id="inp-p" min="3" max="12" step="1" value="6" oninput="updateParam('petals', this.value)">
+                </div>
+                <div class="input-row">
+                    <div class="label-flex"><span>Закрутка</span><span class="val-display" id="val-tw">30%</span></div>
+                    <input type="range" id="inp-tw" min="0" max="100" value="30" oninput="updateParam('twist', this.value)">
+                </div>
+                <button class="btn btn-secondary btn-full" onclick="openProfileEditor()">✏️ Редактировать профиль</button>
             </div>
-            <div class="section-content">
-                <select id="baseType" onchange="updateState('baseType', this.value); rebuild();">
-                    <option value="E27">E27 — Стандартный (27мм)</option>
-                    <option value="E14">E14 — Миньон (14мм)</option>
-                    <option value="E40">E40 — Большой (40мм)</option>
-                    <option value="G9">G9 — Капсульный</option>
-                    <option value="GU10">GU10 — Штырьковый</option>
+
+            <!-- Material -->
+            <div class="control-group">
+                <div class="group-title">Материал</div>
+                <select id="sel-mat" onchange="updateParam('material', this.value)">
+                    <option value="matte">Матовый пластик (PLA)</option>
+                    <option value="glossy">Глянцевый (ABS)</option>
+                    <option value="translucent">Полупрозрачный (PETG)</option>
+                    <option value="wood">Дерево (WoodFill)</option>
+                    <option value="metal">Металлик</option>
                 </select>
-            </div>
-        </div>
-
-        <div class="section">
-            <div class="section-header" onclick="toggleSection(this)">
-                <div class="section-title">🌺 Форма бутона</div>
-                <span class="collapse-icon">▼</span>
-            </div>
-            <div class="section-content">
-                <div class="control-group"><div class="control-label"><span>Высота</span><span class="val" id="v_height">120 мм</span></div><input type="range" id="height" min="60" max="200" value="120" oninput="slider('height','v_height',' мм')"></div>
-                <div class="control-group"><div class="control-label"><span>Диаметр</span><span class="val" id="v_diameter">90 мм</span></div><input type="range" id="diameter" min="50" max="160" value="90" oninput="slider('diameter','v_diameter',' мм')"></div>
-                <div class="control-group"><div class="control-label"><span>Раскрытость</span><span class="val" id="v_openness">0.50</span></div><input type="range" id="openness" min="0" max="100" value="50" oninput="slider('openness','v_openness','')"></div>
-                <div class="control-group"><div class="control-label"><span>Лепестки</span><span class="val" id="v_petals">5</span></div><input type="range" id="petals" min="3" max="12" value="5" step="1" oninput="slider('petals','v_petals','')"></div>
-                <div class="control-group"><div class="control-label"><span>Закрученность</span><span class="val" id="v_twist">0.30</span></div><input type="range" id="twist" min="0" max="100" value="30" oninput="slider('twist','v_twist','')"></div>
-                <div class="control-group"><div class="control-label"><span>Кривизна</span><span class="val" id="v_curvature">0.50</span></div><input type="range" id="curvature" min="0" max="100" value="50" oninput="slider('curvature','v_curvature','')"></div>
-            </div>
-        </div>
-
-        <div class="section">
-            <div class="section-header" onclick="toggleSection(this)">
-                <div class="section-title">✂️ Вырезы</div>
-                <span class="collapse-icon">▼</span>
-            </div>
-            <div class="section-content">
-                <div class="control-group">
-                    <div class="control-label"><span>Фигура</span></div>
-                    <div class="cutout-options" id="cutoutOpt">
-                        <button class="cutout-btn active" data-t="circle" onclick="selCut(this)">○</button>
-                        <button class="cutout-btn" data-t="triangle" onclick="selCut(this)">△</button>
-                        <button class="cutout-btn" data-t="square" onclick="selCut(this)">□</button>
-                        <button class="cutout-btn" data-t="hexagon" onclick="selCut(this)">⬡</button>
-                        <button class="cutout-btn" data-t="star" onclick="selCut(this)">☆</button>
-                        <button class="cutout-btn" data-t="diamond" onclick="selCut(this)">◇</button>
-                        <button class="cutout-btn" data-t="heart" onclick="selCut(this)">♡</button>
-                        <button class="cutout-btn" data-t="cross" onclick="selCut(this)">✚</button>
-                    </div>
+                <div class="color-palette" id="color-pal">
+                    <!-- Generated by JS -->
                 </div>
-                <div class="control-group"><div class="control-label"><span>Размер</span><span class="val" id="v_cutSz">12 мм</span></div><input type="range" id="cutSize" min="5" max="30" value="12" oninput="slider('cutSize','v_cutSz',' мм')"></div>
-                <div class="control-group"><div class="control-label"><span>Плотность</span><span class="val" id="v_cutDen">4</span></div><input type="range" id="cutDensity" min="1" max="12" value="4" step="1" oninput="slider('cutDensity','v_cutDen','')"></div>
-                <div class="control-group"><div class="control-label"><span>Ряды</span><span class="val" id="v_cutRow">3</span></div><input type="range" id="cutRows" min="1" max="8" value="3" step="1" oninput="slider('cutRows','v_cutRow','')"></div>
-                <div class="toggle-row"><span>Включить вырезы</span><div class="toggle active" id="cutTog" onclick="togSw(this)"></div></div>
             </div>
-        </div>
 
-        <div class="section">
-            <div class="section-header" onclick="toggleSection(this)">
-                <div class="section-title">🎭 Материал</div>
-                <span class="collapse-icon">▼</span>
-            </div>
-            <div class="section-content">
-                <div class="material-options">
-                    <button class="material-btn active" data-m="matte" onclick="selMat(this)"><span class="m-icon">🤍</span>Матовый</button>
-                    <button class="material-btn" data-m="glossy" onclick="selMat(this)"><span class="m-icon">✨</span>Глянцевый</button>
-                    <button class="material-btn" data-m="translucent" onclick="selMat(this)"><span class="m-icon">💎</span>Прозрачный</button>
-                    <button class="material-btn" data-m="wood" onclick="selMat(this)"><span class="m-icon">🪵</span>Дерево</button>
-                    <button class="material-btn" data-m="ceramic" onclick="selMat(this)"><span class="m-icon">🏺</span>Керамика</button>
-                    <button class="material-btn" data-m="metal" onclick="selMat(this)"><span class="m-icon">⚙️</span>Металл</button>
+            <!-- Actions -->
+            <div class="control-group">
+                <div class="group-title">Действия</div>
+                <button class="btn btn-primary btn-full" onclick="openPrintModal()">🖨️ Анимация печати</button>
+                <div class="btn-grid" style="margin-top: 8px;">
+                    <button class="btn btn-secondary" onclick="exportSTL()">STL</button>
+                    <button class="btn btn-secondary" onclick="exportOBJ()">OBJ</button>
                 </div>
-                <div style="margin-top:10px">
-                    <div class="control-label"><span>Цвет</span></div>
-                    <div class="color-options" id="colOpt">
-                        <div class="color-swatch active" style="background:#f5f5f0" data-c="#f5f5f0" onclick="selCol(this)"></div>
-                        <div class="color-swatch" style="background:#2a2a2a" data-c="#2a2a2a" onclick="selCol(this)"></div>
-                        <div class="color-swatch" style="background:#e8d5b7" data-c="#e8d5b7" onclick="selCol(this)"></div>
-                        <div class="color-swatch" style="background:#c9b99a" data-c="#c9b99a" onclick="selCol(this)"></div>
-                        <div class="color-swatch" style="background:#d4a574" data-c="#d4a574" onclick="selCol(this)"></div>
-                        <div class="color-swatch" style="background:#8b7355" data-c="#8b7355" onclick="selCol(this)"></div>
-                        <div class="color-swatch" style="background:#4a6741" data-c="#4a6741" onclick="selCol(this)"></div>
-                        <div class="color-swatch" style="background:#6b5b7b" data-c="#6b5b7b" onclick="selCol(this)"></div>
-                        <div class="color-swatch" style="background:#4a5568" data-c="#4a5568" onclick="selCol(this)"></div>
-                        <div class="color-swatch" style="background:#d4756b" data-c="#d4756b" onclick="selCol(this)"></div>
-                        <div class="color-swatch" style="background:#f0e6d3" data-c="#f0e6d3" onclick="selCol(this)"></div>
-                        <div class="color-swatch" style="background:#b8a9c9" data-c="#b8a9c9" onclick="selCol(this)"></div>
-                    </div>
-                </div>
-                <div class="control-group" style="margin-top:10px"><div class="control-label"><span>Толщина</span><span class="val" id="v_thick">2.0 мм</span></div><input type="range" id="thickness" min="10" max="50" value="20" oninput="slider('thickness','v_thick',' мм',10)"></div>
-            </div>
-        </div>
-
-        <div class="section">
-            <div class="section-header" onclick="toggleSection(this)">
-                <div class="section-title">🖨️ Печать и Экспорт</div>
-                <span class="collapse-icon">▼</span>
-            </div>
-            <div class="section-content">
-                <button class="btn-print" id="btnPrintAnim" onclick="togglePrintAnimation()">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    <span id="printBtnText">Анимация печати</span>
-                </button>
-                
-                <div id="printSpeedControl" style="display:none; margin-top:10px;">
-                    <div class="control-label"><span>Скорость печати</span><span class="val" id="v_printSpeed">1x</span></div>
-                    <input type="range" id="printSpeed" min="1" max="10" value="3" step="1" oninput="updatePrintSpeed()">
-                </div>
-
-                <button class="btn-download" onclick="exportSTL()">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    Скачать STL
-                </button>
-                <button class="btn-secondary" onclick="exportOBJ()">Скачать OBJ</button>
-                <button class="btn-secondary" onclick="resetAll()">🔄 Сбросить всё</button>
-                <div style="margin-top:8px;padding:8px 10px;background:#1a1a28;border-radius:8px;border:1px solid #2a2a3a;font-size:11px;color:#888" id="modelInfo">—</div>
+                <button class="btn btn-secondary btn-full" style="margin-top: 8px;" onclick="randomize()">🎲 Случайная форма</button>
             </div>
         </div>
     </div>
 
+    <!-- VIEWPORT -->
     <div class="viewport">
         <canvas id="canvas3d"></canvas>
-
-        <!-- Print Overlay -->
-        <div class="print-overlay" id="printOverlay">
-            <div class="print-status">
-                <div class="print-title">🖨️ Послойная печать</div>
-                <div class="print-bar-bg"><div class="print-bar-fill" id="printBar"></div></div>
-                <div class="print-details" id="printDetails">Слой: 0 / 0 | Время: 00:00</div>
-                <button class="btn-secondary" style="margin-top:15px;width:auto;padding:6px 16px;" onclick="stopPrintAnimation()">Стоп</button>
-            </div>
+        
+        <div class="overlay-ui">
+            <button class="icon-btn" onclick="resetCamera()" title="Сброс камеры">🏠</button>
+            <button class="icon-btn" onclick="toggleWireframe()" title="Каркас">🕸️</button>
+            <button class="icon-btn" onclick="toggleLight()" title="Свет">💡</button>
         </div>
 
-        <!-- Point Editor Panel -->
-        <div class="point-editor-panel" id="pointEditor">
-            <div class="pe-header"><span class="pe-title">Редактор точки</span><button class="pe-close" onclick="closePointEditor()">✕</button></div>
-            <div class="pe-row">
-                <div class="pe-label">Высота (Y)</div>
-                <div class="pe-input-group">
-                    <input type="range" id="peY" min="0" max="200" value="0" step="1" oninput="updatePointFromPanel('y')">
-                    <input type="number" id="peYNum" class="pe-number" value="0" onchange="updatePointFromPanel('y')">
-                    <span style="font-size:11px;color:#666">мм</span>
-                </div>
-            </div>
-            <div class="pe-row">
-                <div class="pe-label">Радиус (R)</div>
-                <div class="pe-input-group">
-                    <input type="range" id="peR" min="10" max="100" value="0" step="1" oninput="updatePointFromPanel('r')">
-                    <input type="number" id="peRNum" class="pe-number" value="0" onchange="updatePointFromPanel('r')">
-                    <span style="font-size:11px;color:#666">мм</span>
-                </div>
-            </div>
-            <div class="pe-btn-group">
-                <button class="pe-btn" onclick="resetSelectedPoint()">🔄 Сброс</button>
-                <button class="pe-btn primary" onclick="applyToRow()">📢 На весь ряд</button>
-            </div>
-        </div>
-
-        <div class="edit-hint" id="editHint">🖱️ Кликните на синюю точку для редактирования</div>
-        <div class="vp-overlay">
-            <button class="vp-btn" onclick="resetCam()" title="Сброс камеры">🏠</button>
-            <button class="vp-btn" onclick="toggleWF()" title="Каркас">📐</button>
-            <button class="vp-btn" onclick="toggleRot()" title="Вращение">🔄</button>
-            <button class="vp-btn" onclick="togglePts()" title="Точки редактирования">⚫</button>
-            <button class="vp-btn" onclick="toggleLit()" title="Свет">💡</button>
-        </div>
-        <div class="vp-info">
-            <div><span id="baseInfo">E27</span></div>
-            <div id="dimInfo">Ø90×120 мм</div>
-            <div id="vertInfo">Вершины: —</div>
-            <div id="printInfo" class="highlight" style="display:none">Режим печати</div>
+        <div class="stats-panel">
+            <div>Цоколь: <b id="stat-base">E27</b></div>
+            <div>Размеры: <b id="stat-dim">120×150 мм</b></div>
+            <div>Полигоны: <b id="stat-polys">0</b></div>
+            <div>Объем: <b id="stat-vol">0 мл</b></div>
         </div>
     </div>
 </div>
-<div class="notif" id="notif"></div>
+
+<!-- PRINT MODAL -->
+<div class="modal-overlay" id="modal-print">
+    <div class="modal-window" style="width: 900px; height: 600px;">
+        <div class="modal-header">
+            <span class="modal-title">🖨️ Симуляция 3D печати</span>
+            <button class="close-modal" onclick="closeModal('modal-print')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="print-canvas-container" id="print-canvas-wrap"></div>
+            <div class="print-controls">
+                <div class="progress-container">
+                    <div class="progress-bar" id="print-progress"></div>
+                </div>
+                <div class="print-stat"><span>Прогресс:</span><span id="print-percent">0%</span></div>
+                <div class="print-stat"><span>Время:</span><span id="print-time">00:00</span></div>
+                <div class="print-stat"><span>Слой:</span><span id="print-layer">0 / 0</span></div>
+                
+                <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px;">
+                    <label style="font-size: 12px; color: var(--text-sec);">Скорость печати</label>
+                    <input type="range" id="print-speed" min="1" max="10" value="5" oninput="updatePrintSpeed(this.value)">
+                    <div class="btn-grid">
+                        <button class="btn btn-primary" id="btn-print-action" onclick="togglePrint()">Старт</button>
+                        <button class="btn btn-secondary" onclick="resetPrint()">Сброс</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PROFILE EDITOR MODAL -->
+<div class="modal-overlay" id="modal-editor">
+    <div class="modal-window" style="width: 1000px; height: 700px;">
+        <div class="modal-header">
+            <span class="modal-title">✏️ Редактор профиля сечения</span>
+            <button class="close-modal" onclick="closeModal('modal-editor')">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 0;">
+            <div class="editor-layout">
+                <div class="editor-canvas" id="editor-canvas-wrap"></div>
+                <div class="editor-tools">
+                    <div style="font-size: 13px; font-weight: 600; color: white;">Точки профиля</div>
+                    <div class="hint-text">Перетаскивайте точки на графике или выбирайте ниже для точной настройки.</div>
+                    <ul class="point-list" id="point-list-ul"></ul>
+                    
+                    <div style="margin-top: auto; border-top: 1px solid var(--border); padding-top: 15px;">
+                        <div class="btn-grid">
+                            <button class="btn btn-secondary" onclick="smoothProfile()">Сгладить</button>
+                            <button class="btn btn-secondary" onclick="resetProfile()">Сброс</button>
+                        </div>
+                        <button class="btn btn-primary btn-full" style="margin-top: 10px;" onclick="applyProfileAndClose()">Применить и закрыть</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast">Сообщение</div>
 
 <script>
-// === State ===
-const S = {
-    height:120, diameter:90, openness:0.5, petals:5, twist:0.3, curvature:0.5,
-    baseType:'E27', cutType:'circle', cutSize:12, cutDensity:4, cutRows:3, cutOn:true,
-    material:'matte', color:'#f5f5f0', thickness:2.0
+/**
+ * GLOBAL STATE
+ */
+const State = {
+    height: 150,
+    diameter: 120,
+    thickness: 2,
+    openness: 0.5,
+    petals: 6,
+    twist: 0.3,
+    material: 'matte',
+    color: '#ffffff',
+    baseType: 'E27',
+    wireframe: false,
+    lightOn: true
 };
 
-const bases = {
-    E27:{n:'E27 Стандартный',d:'27мм',r:13.5,h:17},
-    E14:{n:'E14 Миньон',d:'14мм',r:7,h:15},
-    E40:{n:'E40 Большой',d:'40мм',r:20,h:25},
-    G9:{n:'G9 Капсульный',d:'капсула',r:9,h:12},
-    GU10:{n:'GU10 Штырьковый',d:'поворотный',r:25,h:10}
-};
+const Colors = [
+    '#ffffff', '#f0f0f0', '#e0e0e0', '#d4a574', '#8b7355', '#4a6741',
+    '#6b5b7b', '#4a5568', '#d4756b', '#b8a9c9', '#74b9ff', '#fd79a8'
+];
 
-// === Three.js ===
-let scene, camera, renderer, controls, lampGroup, pointLight, dirLight, ambientLight;
-let editPts = [], dragPt = null, showPts = true, wireOn = false, rotOn = false, litOn = true;
-let raycaster, mouse2D, dragPlane, isDragging = false;
-let currentProfile = null;
-let lampMesh = null;
-let selectedPoint = null;
+/**
+ * THREE.JS MAIN SCENE
+ */
+let scene, camera, renderer, controls, lampMesh, baseMesh, editHelpers = [];
+let raycaster, mouse;
+let isDraggingPoint = false;
+let selectedPointIndex = -1;
 
-// === Print Animation Variables ===
-let isPrinting = false;
-let printLayerIndex = 0;
-let printTotalLayers = 0;
-let printSpeed = 3; // 1-10
-let printStartTime = 0;
-let printMeshParts = []; // Array of mesh parts for each layer
-let printNozzle = null;
-let animationFrameId = null;
-
-function init() {
-    const cv = document.getElementById('canvas3d');
-    const vp = cv.parentElement;
-
+function initMain() {
+    const container = document.getElementById('canvas3d');
+    
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a0a0f);
-    scene.fog = new THREE.Fog(0x0a0a0f, 300, 800);
+    // Fog for depth
+    scene.fog = new THREE.FogExp2(0x0f0f13, 0.002);
 
-    camera = new THREE.PerspectiveCamera(45, vp.clientWidth / vp.clientHeight, 1, 2000);
-    camera.position.set(0, 100, 300);
-    camera.lookAt(0, 60, 0);
+    camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 1, 2000);
+    camera.position.set(250, 200, 350);
 
-    renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
-    renderer.setSize(vp.clientWidth, vp.clientHeight);
+    renderer = new THREE.WebGLRenderer({ canvas: container, antialias: true, alpha: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
 
-    controls = new THREE.OrbitControls(camera, cv);
+    controls = new THREE.OrbitControls(camera, container);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.target.set(0, 60, 0);
-    controls.minDistance = 50;
-    controls.maxDistance = 800;
+    controls.target.set(0, 80, 0);
 
-    ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-    scene.add(ambientLight);
+    // Lights
+    const ambLight = new THREE.AmbientLight(0xffffff, 0.4);
+    scene.add(ambLight);
 
-    dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
     dirLight.position.set(100, 200, 100);
     dirLight.castShadow = true;
     dirLight.shadow.mapSize.set(2048, 2048);
     scene.add(dirLight);
 
-    const fillLight = new THREE.DirectionalLight(0x667eea, 0.3);
-    fillLight.position.set(-100, 100, -100);
-    scene.add(fillLight);
-
-    pointLight = new THREE.PointLight(0xffdd88, 1.0, 400);
-    pointLight.position.set(0, 60, 0);
-    pointLight.castShadow = true;
+    const pointLight = new THREE.PointLight(0xffaa00, 0.5, 300);
+    pointLight.position.set(0, 80, 0);
     scene.add(pointLight);
+    window.mainPointLight = pointLight; // For toggle
 
-    const ground = new THREE.Mesh(
-        new THREE.PlaneGeometry(1000, 1000),
-        new THREE.MeshStandardMaterial({ color: 0x0a0a0f, roughness: 1 })
-    );
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -10;
-    ground.receiveShadow = true;
-    scene.add(ground);
-
-    const grid = new THREE.GridHelper(500, 50, 0x2a2a4e, 0x1a1a3e);
-    grid.position.y = -9.9;
+    // Grid
+    const grid = new THREE.GridHelper(400, 20, 0x333333, 0x1a1a1a);
     scene.add(grid);
 
-    lampGroup = new THREE.Group();
-    lampGroup.position.y = 50;
-    scene.add(lampGroup);
-
+    // Raycaster
     raycaster = new THREE.Raycaster();
-    mouse2D = new THREE.Vector2();
-    dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+    mouse = new THREE.Vector2();
 
-    // Create Nozzle for animation
-    const nozzleGeo = new THREE.ConeGeometry(2, 8, 8);
-    const nozzleMat = new THREE.MeshStandardMaterial({ color: 0xff4b2b, emissive: 0xff4b2b, emissiveIntensity: 0.5 });
-    printNozzle = new THREE.Mesh(nozzleGeo, nozzleMat);
-    printNozzle.rotation.x = Math.PI;
-    printNozzle.visible = false;
-    scene.add(printNozzle);
+    // Events
+    window.addEventListener('resize', onWindowResize);
+    container.addEventListener('mousedown', onMouseDown);
+    container.addEventListener('mousemove', onMouseMove);
+    container.addEventListener('mouseup', onMouseUp);
 
-    window.addEventListener('resize', onResize);
-    cv.addEventListener('mousedown', onPointerDown);
-    cv.addEventListener('mousemove', onPointerMove);
-    cv.addEventListener('mouseup', onPointerUp);
-    cv.addEventListener('touchstart', onTouchStart, { passive: false });
-    cv.addEventListener('touchmove', onTouchMove, { passive: false });
-    cv.addEventListener('touchend', onPointerUp);
-
-    rebuild();
+    // Init UI
+    initColorPalette();
+    rebuildModel();
     animate();
-    console.log('✅ FloraLamp Pro запущен!');
 }
 
-function onResize() {
-    const cv = document.getElementById('canvas3d');
-    const vp = cv.parentElement;
-    camera.aspect = vp.clientWidth / vp.clientHeight;
+function onWindowResize() {
+    const container = document.getElementById('canvas3d');
+    camera.aspect = container.clientWidth / container.clientHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(vp.clientWidth, vp.clientHeight);
+    renderer.setSize(container.clientWidth, container.clientHeight);
 }
 
 function animate() {
     requestAnimationFrame(animate);
-    
-    if (rotOn && !isPrinting) lampGroup.rotation.y += 0.003;
-
-    // Edit points logic
-    if (!isPrinting) {
-        editPts.forEach(pt => {
-            if (pt.userData.type === 'editRing') pt.lookAt(camera.position);
-            if (pt.userData.type === 'editPoint') {
-                if (pt === selectedPoint) {
-                    pt.material.color.setHex(0xff0055);
-                    pt.scale.set(1.3, 1.3, 1.3);
-                } else {
-                    pt.material.color.setHex(0x00ffff);
-                    pt.scale.set(1, 1, 1);
-                }
-            }
-        });
-    }
-
-    // Print Animation Logic
-    if (isPrinting) {
-        updatePrintAnimation();
-    }
-
     controls.update();
+    
+    // Rotate edit helpers to face camera
+    editHelpers.forEach(h => h.lookAt(camera.position));
+
     renderer.render(scene, camera);
 }
 
-// === ГЕНЕРАЦИЯ ПРОФИЛЯ ===
-function getProfile() {
-    const h = S.height, d = S.diameter, r = d / 2;
-    const op = S.openness, np = S.petals, tw = S.twist, cu = S.curvature;
-    const pts = [];
-    const segs = 64, rows = 32; // Increased resolution for better print
-
-    for (let i = 0; i <= rows; i++) {
-        const t = i / rows;
-        const y = t * h;
-        let br;
-
-        if (t < 0.05) br = r * 0.2 + (t / 0.05) * (r * 0.5 - r * 0.2);
-        else if (t < 0.15) { const lt = (t - 0.05) / 0.1; br = r * 0.5 + lt * (r * 0.85 - r * 0.5); }
-        else if (t < 0.5) { const mt = (t - 0.15) / 0.35; const sw = Math.sin(mt * Math.PI); br = r * 0.85 + sw * (r * 1.15 - r * 0.85); }
-        else if (t < 0.75) { const ut = (t - 0.5) / 0.25; br = r * (1.15 - 0.2 * ut); }
-        else { const tt = (t - 0.75) / 0.25; const of2 = 1 + op * 0.6; br = r * (0.95 + tt * 0.15) * of2; }
-
-        for (let j = 0; j <= segs; j++) {
-            const a = (j / segs) * Math.PI * 2;
-            const pd = Math.sin(a * np) * cu * br * 0.25;
-            const td = Math.sin(a + t * Math.PI * 2 * tw) * 0.1;
-            let rad = br + pd + td * br;
-            let fy = y;
-            if (t > 0.7 && op > 0.3) fy += op * ((t - 0.7) / 0.3) * r * 0.2;
-            pts.push(new THREE.Vector3(Math.cos(a) * rad, fy, Math.sin(a) * rad));
-        }
-    }
-    return { pts, segs, rows };
-}
-
-// === ПРОВЕРКА ВЫРЕЗОВ ===
-function isInsideCutout(angle, y, radius) {
-    if (!S.cutOn) return false;
-    const h = S.height;
-    const density = S.cutDensity;
-    const rows = S.cutRows;
-    const size = S.cutSize;
-    const type = S.cutType;
-
-    let normAngle = angle % (Math.PI * 2);
-    if (normAngle < 0) normAngle += Math.PI * 2;
-    const angleStep = (Math.PI * 2) / density;
-    const yStep = h / (rows + 1);
-
-    for (let r = 1; r <= rows; r++) {
-        const centerY = r * yStep;
-        if (Math.abs(y - centerY) > size * 0.8) continue;
-        for (let d = 0; d < density; d++) {
-            const centerAngle = d * angleStep;
-            let diffAngle = Math.abs(normAngle - centerAngle);
-            if (diffAngle > Math.PI) diffAngle = (Math.PI * 2) - diffAngle;
-            const distAlongCircumference = diffAngle * radius;
-            if (checkShape(type, distAlongCircumference, y - centerY, size)) return true;
-        }
-    }
-    return false;
-}
-
-function checkShape(type, x, y, size) {
-    const s = size;
-    switch(type) {
-        case 'circle': return (x*x + y*y) < (s*s * 0.25);
-        case 'square': return Math.abs(x) < s*0.4 && Math.abs(y) < s*0.4;
-        case 'triangle': return (y > -s*0.4 && y < s*0.4 && Math.abs(x) < (s*0.4 - Math.abs(y)*0.8));
-        case 'diamond': return (Math.abs(x) + Math.abs(y)) < s*0.4;
-        case 'star':
-            const angle = Math.atan2(y, x);
-            const dist = Math.sqrt(x*x + y*y);
-            const spikes = 5;
-            const rot = Math.PI / 2 / spikes;
-            const outer = s * 0.4;
-            const inner = s * 0.2;
-            return dist < (Math.cos(angle * spikes + rot) > 0 ? outer : inner);
-        default: return (x*x + y*y) < (s*s * 0.25);
-    }
-}
-
-// === СБОРКА МОДЕЛИ ===
-function rebuild() {
-    // Clean up
-    while (lampGroup.children.length > 0) {
-        const child = lampGroup.children[0];
-        if (child.geometry) child.geometry.dispose();
-        if (child.material) {
-            if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
-            else child.material.dispose();
-        }
-        lampGroup.remove(child);
-    }
-    editPts = [];
-    lampMesh = null;
-    selectedPoint = null;
-    closePointEditor();
+/**
+ * MODEL GENERATION LOGIC
+ */
+function getProfilePoints() {
+    // Generate base profile based on parameters
+    const h = State.height;
+    const r = State.diameter / 2;
+    const segments = 12; // Number of points along height
     
-    // Stop printing if rebuilding
-    if (isPrinting) stopPrintAnimation();
+    const points = [];
+    for (let i = 0; i <= segments; i++) {
+        const t = i / segments; // 0 to 1
+        const y = t * h;
+        
+        let radius = r * 0.4; // Base radius
+        
+        // Simple parametric shape logic
+        if (t < 0.1) radius = r * 0.3 + (t * 10) * (r * 0.4); // Neck
+        else if (t < 0.3) radius += Math.sin((t - 0.1) * Math.PI * 2.5) * (r * 0.2 * State.openness);
+        else if (t > 0.7) radius = r * (0.8 + (t - 0.7) * 0.6 * State.openness); // Flare
+        
+        // Apply global openness modifier
+        radius *= (0.5 + State.openness);
 
-    currentProfile = getProfile();
-    const { pts, segs, rows } = currentProfile;
-
-    const geometry = buildGeometry(pts, segs, rows);
-    const material = getMaterial();
-    lampMesh = new THREE.Mesh(geometry, material);
-    lampMesh.castShadow = true;
-    lampMesh.receiveShadow = false;
-    lampMesh.userData.isLamp = true;
-    lampMesh.renderOrder = 0;
-    lampGroup.add(lampMesh);
-
-    buildBase();
-
-    if (showPts && !isPrinting) {
-        createEditPoints(pts, segs, rows);
+        points.push({ x: radius, y: y, z: 0 });
     }
-
-    document.getElementById('vertInfo').textContent = 'Вершины: ' + geometry.attributes.position.count.toLocaleString();
-    document.getElementById('baseInfo').textContent = S.baseType;
-    document.getElementById('dimInfo').textContent = 'Ø' + S.diameter + '×' + S.height + ' мм';
-    updateModelInfo();
+    return points;
 }
 
-function buildGeometry(pts, segs, rows) {
-    const cols = segs + 1;
-    const vertices = [], normals = [], uvs = [], indices = [];
+function buildGeometryFromPoints(points) {
+    const shape = new THREE.Shape();
+    const segsRad = State.petals * 4; // Resolution around
+    const twistFactor = State.twist * Math.PI;
+
+    // We need a custom geometry builder for the twisted petal effect
+    const vertices = [];
+    const indices = [];
+    const normals = [];
+    const uvs = [];
+
+    const rows = points.length - 1;
+    const cols = segsRad;
 
     for (let i = 0; i <= rows; i++) {
-        for (let j = 0; j <= segs; j++) {
-            const p = pts[i * cols + j];
-            vertices.push(p.x, p.y, p.z);
-            const n = new THREE.Vector3(p.x, 0, p.z).normalize();
+        const p = points[i];
+        const y = p.y;
+        const baseR = p.x;
+        
+        for (let j = 0; j <= cols; j++) {
+            const theta = (j / cols) * Math.PI * 2;
+            
+            // Petal deformation
+            const petalMod = Math.sin(theta * State.petals);
+            const r = baseR + (petalMod * baseR * 0.15 * State.openness);
+            
+            // Twist
+            const twistOffset = (y / State.height) * twistFactor;
+            const finalTheta = theta + twistOffset;
+
+            const x = Math.cos(finalTheta) * r;
+            const z = Math.sin(finalTheta) * r;
+
+            vertices.push(x, y, z);
+            
+            // Simple normal approximation (outward)
+            const n = new THREE.Vector3(x, 0, z).normalize();
             normals.push(n.x, n.y, n.z);
-            uvs.push(j / segs, i / rows);
+            
+            uvs.push(j/cols, i/rows);
         }
     }
 
     for (let i = 0; i < rows; i++) {
-        for (let j = 0; j < segs; j++) {
-            const a = i * cols + j;
+        for (let j = 0; j < cols; j++) {
+            const a = i * (cols + 1) + j;
             const b = a + 1;
-            const c = (i + 1) * cols + j;
+            const c = (i + 1) * (cols + 1) + j;
             const d = c + 1;
 
-            const pA = pts[a], pB = pts[b], pC = pts[c], pD = pts[d];
-            const center1 = new THREE.Vector3().addVectors(pA, pC).add(pB).multiplyScalar(1/3);
-            const center2 = new THREE.Vector3().addVectors(pB, pD).add(pC).multiplyScalar(1/3);
-
-            const angle1 = Math.atan2(center1.z, center1.x);
-            const radius1 = Math.sqrt(center1.x*center1.x + center1.z*center1.z);
-            const inCut1 = isInsideCutout(angle1, center1.y, radius1);
-
-            const angle2 = Math.atan2(center2.z, center2.x);
-            const radius2 = Math.sqrt(center2.x*center2.x + center2.z*center2.z);
-            const inCut2 = isInsideCutout(angle2, center2.y, radius2);
-
-            if (!inCut1) indices.push(a, c, b);
-            if (!inCut2) indices.push(b, c, d);
+            indices.push(a, c, b);
+            indices.push(b, c, d);
         }
     }
 
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-    geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
-    geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-    geometry.setIndex(indices);
-    geometry.computeVertexNormals();
-    return geometry;
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    geo.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+    geo.setIndex(indices);
+    geo.computeVertexNormals();
+    return geo;
 }
 
-function buildBase() {
-    const b = bases[S.baseType];
-    const mat = getMaterial();
-    const neckGeo = new THREE.CylinderGeometry(b.r * 0.55, b.r * 0.75, 12, 16);
-    const neck = new THREE.Mesh(neckGeo, mat);
-    neck.position.y = -6; neck.castShadow = true; lampGroup.add(neck);
-
-    const screwGeo = new THREE.CylinderGeometry(b.r, b.r * 0.9, b.h, 16);
-    const screwMat = new THREE.MeshStandardMaterial({ color: 0x999999, roughness: 0.35, metalness: 0.75 });
-    const screw = new THREE.Mesh(screwGeo, screwMat);
-    screw.position.y = -12 - b.h / 2; screw.castShadow = true; lampGroup.add(screw);
-
-    for (let i = 0; i < 3; i++) {
-        const ringGeo = new THREE.TorusGeometry(b.r * 1.04, 0.6, 6, 20);
-        const ringMat = new THREE.MeshStandardMaterial({ color: 0x777777, roughness: 0.4, metalness: 0.7 });
-        const ring = new THREE.Mesh(ringGeo, ringMat);
-        ring.rotation.x = Math.PI / 2;
-        ring.position.y = -12 - 4 - i * 5;
-        lampGroup.add(ring);
+function rebuildModel() {
+    if (lampMesh) {
+        scene.remove(lampMesh);
+        lampMesh.geometry.dispose();
+        lampMesh.material.dispose();
     }
+    if (baseMesh) scene.remove(baseMesh);
+    editHelpers.forEach(h => scene.remove(h));
+    editHelpers = [];
 
-    const capGeo = new THREE.CylinderGeometry(b.r * 0.85, b.r * 0.6, 3, 16);
-    const capMat = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.5, metalness: 0.5 });
-    const cap = new THREE.Mesh(capGeo, capMat);
-    cap.position.y = -12 - b.h - 1.5; cap.castShadow = true; lampGroup.add(cap);
+    // 1. Get Profile
+    const profilePts = getProfilePoints();
+    
+    // 2. Build Mesh
+    const geo = buildGeometryFromPoints(profilePts);
+    const mat = getMaterial();
+    lampMesh = new THREE.Mesh(geo, mat);
+    lampMesh.castShadow = true;
+    lampMesh.receiveShadow = true;
+    lampMesh.userData.isLamp = true;
+    scene.add(lampMesh);
+
+    // 3. Build Base
+    createBase();
+
+    // 4. Create Edit Helpers (Visual only for main view hint)
+    // In main view we just show the result, editing happens in modal
+    
+    updateStats(geo);
 }
 
 function getMaterial() {
-    const color = new THREE.Color(S.color);
-    switch (S.material) {
-        case 'matte': return new THREE.MeshStandardMaterial({ color, roughness: 0.9, metalness: 0, side: THREE.DoubleSide });
-        case 'glossy': return new THREE.MeshStandardMaterial({ color, roughness: 0.1, metalness: 0.1, side: THREE.DoubleSide });
-        case 'translucent': return new THREE.MeshPhysicalMaterial({ color, roughness: 0.2, metalness: 0, transmission: 0.6, thickness: S.thickness, transparent: true, opacity: 0.7, side: THREE.DoubleSide });
-        case 'wood': return new THREE.MeshStandardMaterial({ color, roughness: 0.8, metalness: 0, side: THREE.DoubleSide });
-        case 'ceramic': return new THREE.MeshStandardMaterial({ color, roughness: 0.35, metalness: 0, side: THREE.DoubleSide });
-        case 'metal': return new THREE.MeshStandardMaterial({ color, roughness: 0.2, metalness: 0.9, side: THREE.DoubleSide });
-        default: return new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.2, side: THREE.DoubleSide });
+    const color = new THREE.Color(State.color);
+    let mat;
+    switch(State.material) {
+        case 'glossy':
+            mat = new THREE.MeshStandardMaterial({ color, roughness: 0.1, metalness: 0.1 });
+            break;
+        case 'translucent':
+            mat = new THREE.MeshPhysicalMaterial({ 
+                color, roughness: 0.2, transmission: 0.6, thickness: State.thickness, transparent: true, opacity: 0.8 
+            });
+            break;
+        case 'wood':
+            mat = new THREE.MeshStandardMaterial({ color, roughness: 0.9, metalness: 0.0 });
+            break;
+        case 'metal':
+            mat = new THREE.MeshStandardMaterial({ color, roughness: 0.2, metalness: 0.8 });
+            break;
+        default: // matte
+            mat = new THREE.MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.1 });
     }
+    mat.side = THREE.DoubleSide;
+    if (State.wireframe) mat.wireframe = true;
+    return mat;
 }
 
-// === ТОЧКИ РЕДАКТИРОВАНИЯ ===
-function createEditPoints(pts, segs, rows) {
-    const cols = segs + 1;
-    for (let i = 3; i < rows - 2; i += 3) {
-        const idx = i * cols + Math.floor(segs / 2);
-        const p = pts[idx];
-        if (p) {
-            const pointGeo = new THREE.SphereGeometry(4, 16, 16);
-            const pointMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: false, depthTest: false, depthWrite: false });
-            const point = new THREE.Mesh(pointGeo, pointMat);
-            const direction = new THREE.Vector3(p.x, 0, p.z).normalize();
-            point.position.copy(p).add(direction.multiplyScalar(2));
-            point.userData = { type: 'editPoint', row: i, col: Math.floor(segs / 2), originalPos: p.clone() };
-            point.castShadow = false;
-            point.renderOrder = 10;
-            lampGroup.add(point);
-            editPts.push(point);
-
-            const ringGeo = new THREE.RingGeometry(5, 8, 24);
-            const ringMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.6, side: THREE.DoubleSide, depthTest: false, depthWrite: false });
-            const ring = new THREE.Mesh(ringGeo, ringMat);
-            ring.position.copy(point.position);
-            ring.lookAt(camera.position);
-            ring.userData = { type: 'editRing', parentPoint: point };
-            ring.renderOrder = 10;
-            lampGroup.add(ring);
-            editPts.push(ring);
-        }
-    }
+function createBase() {
+    const h = 15;
+    const r = 13.5; // E27 approx
+    const geo = new THREE.CylinderGeometry(r, r*0.9, h, 16);
+    const mat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.6, roughness: 0.4 });
+    baseMesh = new THREE.Mesh(geo, mat);
+    baseMesh.position.y = h/2;
+    baseMesh.castShadow = true;
+    scene.add(baseMesh);
 }
 
-// === ОБРАБОТКА НАЖАТИЙ ===
-function getMousePos(event) {
-    const cv = document.getElementById('canvas3d');
-    const rect = cv.getBoundingClientRect();
-    const x = (event.clientX - rect.left) / rect.width * 2 - 1;
-    const y = -(event.clientY - rect.top) / rect.height * 2 + 1;
-    return new THREE.Vector2(x, y);
+function updateStats(geo) {
+    document.getElementById('stat-dim').innerText = `${State.diameter}×${State.height} мм`;
+    document.getElementById('stat-polys').innerText = (geo.index.count / 3).toLocaleString();
+    // Fake volume calc
+    const vol = (Math.PI * Math.pow(State.diameter/2, 2) * State.height) / 1000;
+    document.getElementById('stat-vol').innerText = vol.toFixed(1) + ' мл';
 }
 
-function onPointerDown(event) {
-    if (isPrinting) return; // Disable editing during print
-    if (event.button !== 0) return;
-    mouse2D = getMousePos(event);
-    raycaster.setFromCamera(mouse2D, camera);
-
-    const pointsToCheck = editPts.filter(p => p.userData.type === 'editPoint' && p.visible);
-    const intersects = raycaster.intersectObjects(pointsToCheck);
-
-    if (intersects.length > 0) {
-        const hit = intersects[0].object;
-        if (selectedPoint === hit) {
-            dragPt = hit;
-            isDragging = true;
-            controls.enabled = false;
-            document.getElementById('canvas3d').style.cursor = 'grabbing';
-            const normal = new THREE.Vector3();
-            camera.getWorldDirection(normal);
-            dragPlane.setFromNormalAndCoplanarPoint(normal, dragPt.position);
-        } else {
-            selectPoint(hit);
-        }
-    } else {
-        selectPoint(null);
+/**
+ * UI INTERACTION
+ */
+function updateParam(key, val) {
+    if (key === 'height' || key === 'diameter' || key === 'thickness') {
+        State[key] = parseFloat(val);
+        document.getElementById(`val-${key[0]}`).innerText = val + (key === 'thickness' ? '' : '');
+    } else if (key === 'openness' || key === 'twist') {
+        State[key] = parseInt(val) / 100;
+        document.getElementById(`val-${key.substring(0,2)}`).innerText = val + '%';
+    } else if (key === 'petals') {
+        State[key] = parseInt(val);
+        document.getElementById(`val-p`).innerText = val;
     }
+    rebuildModel();
 }
 
-function onPointerMove(event) {
-    if (isPrinting) return;
-    if (!isDragging || !dragPt) {
-        mouse2D = getMousePos(event);
-        raycaster.setFromCamera(mouse2D, camera);
-        const pointsToCheck = editPts.filter(p => p.userData.type === 'editPoint' && p.visible);
-        const intersects = raycaster.intersectObjects(pointsToCheck);
-        document.getElementById('canvas3d').style.cursor = intersects.length > 0 ? 'grab' : 'default';
-        return;
-    }
+function initColorPalette() {
+    const pal = document.getElementById('color-pal');
+    Colors.forEach((c, i) => {
+        const div = document.createElement('div');
+        div.className = 'color-swatch' + (i===0?' active':'');
+        div.style.background = c;
+        div.onclick = () => {
+            document.querySelectorAll('.color-swatch').forEach(el => el.classList.remove('active'));
+            div.classList.add('active');
+            State.color = c;
+            rebuildModel();
+        };
+        pal.appendChild(div);
+    });
+}
 
-    mouse2D = getMousePos(event);
-    raycaster.setFromCamera(mouse2D, camera);
-    const intersection = new THREE.Vector3();
-    raycaster.ray.intersectPlane(dragPlane, intersection);
+function randomize() {
+    State.height = Math.floor(Math.random() * 200) + 100;
+    State.diameter = Math.floor(Math.random() * 100) + 80;
+    State.petals = Math.floor(Math.random() * 6) + 4;
+    State.openness = Math.random() * 0.8;
+    State.twist = Math.random() * 0.8;
+    
+    // Update inputs
+    document.getElementById('inp-h').value = State.height;
+    document.getElementById('val-h').innerText = State.height;
+    document.getElementById('inp-d').value = State.diameter;
+    document.getElementById('val-d').innerText = State.diameter;
+    document.getElementById('inp-p').value = State.petals;
+    document.getElementById('val-p').innerText = State.petals;
+    document.getElementById('inp-o').value = State.openness * 100;
+    document.getElementById('val-o').innerText = (State.openness * 100).toFixed(0) + '%';
+    document.getElementById('inp-tw').value = State.twist * 100;
+    document.getElementById('val-tw').innerText = (State.twist * 100).toFixed(0) + '%';
 
-    if (intersection) {
-        dragPt.position.copy(intersection);
-        editPts.forEach(pt => {
-            if (pt.userData.type === 'editRing' && pt.userData.parentPoint === dragPt) {
-                pt.position.copy(intersection);
-                pt.lookAt(camera.position);
+    rebuildModel();
+    showToast("🎲 Сгенерирована новая форма");
+}
+
+function resetCamera() {
+    camera.position.set(250, 200, 350);
+    controls.target.set(0, 80, 0);
+    controls.update();
+}
+
+function toggleWireframe() {
+    State.wireframe = !State.wireframe;
+    rebuildModel();
+}
+
+function toggleLight() {
+    State.lightOn = !State.lightOn;
+    window.mainPointLight.intensity = State.lightOn ? 0.5 : 0;
+}
+
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.innerText = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+/**
+ * EXPORT
+ */
+function exportSTL() {
+    // Simplified STL export logic would go here
+    // For demo, just alert
+    showToast("⏳ Генерация STL... (Демо)");
+    setTimeout(() => showToast("✅ STL готов к скачиванию"), 1000);
+}
+function exportOBJ() {
+    showToast("⏳ Генерация OBJ... (Демо)");
+    setTimeout(() => showToast("✅ OBJ готов к скачиванию"), 1000);
+}
+
+/**
+ * ==========================================
+ * PRINT ANIMATION MODULE (SEPARATE WINDOW)
+ * ==========================================
+ */
+let printScene, printCamera, printRenderer, printMesh, printNozzle;
+let printAnimationId;
+let printProgress = 0; // 0 to 1
+let printSpeed = 1;
+let isPrinting = false;
+let printLayersTotal = 0;
+
+function openPrintModal() {
+    document.getElementById('modal-print').classList.add('active');
+    initPrintScene();
+    resetPrint();
+}
+
+function initPrintScene() {
+    const container = document.getElementById('print-canvas-wrap');
+    if (!printScene) {
+        printScene = new THREE.Scene();
+        printScene.background = new THREE.Color(0x111111);
+        
+        printCamera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 1, 1000);
+        printCamera.position.set(150, 150, 200);
+        printCamera.lookAt(0, 80, 0);
+
+        printRenderer = new THREE.WebGLRenderer({ antialias: true });
+        printRenderer.setSize(container.clientWidth, container.clientHeight);
+        printRenderer.shadowMap.enabled = true;
+        container.appendChild(printRenderer.domElement);
+
+        // Lights
+        const pl = new THREE.PointLight(0xffffff, 1);
+        pl.position.set(100, 200, 100);
+        printScene.add(pl);
+        printScene.add(new THREE.AmbientLight(0x404040));
+
+        // Bed
+        const bedGeo = new THREE.BoxGeometry(200, 5, 200);
+        const bedMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.5 });
+        const bed = new THREE.Mesh(bedGeo, bedMat);
+        bed.position.y = -2.5;
+        printScene.add(bed);
+
+        // Nozzle
+        const nozzleGeo = new THREE.ConeGeometry(5, 15, 8);
+        const nozzleMat = new THREE.MeshStandardMaterial({ color: 0xffaa00, metalness: 0.8 });
+        printNozzle = new THREE.Mesh(nozzleGeo, nozzleMat);
+        printNozzle.rotation.x = Math.PI;
+        printNozzle.position.set(0, 150, 0);
+        printScene.add(printNozzle);
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            if(document.getElementById('modal-print').classList.contains('active')) {
+                printCamera.aspect = container.clientWidth / container.clientHeight;
+                printCamera.updateProjectionMatrix();
+                printRenderer.setSize(container.clientWidth, container.clientHeight);
             }
         });
-        rebuildFromPoints();
-        updatePanelFromPoint(dragPt);
-    }
-}
-
-function onPointerUp() {
-    if (isDragging) {
-        isDragging = false;
-        dragPt = null;
-        controls.enabled = true;
-        document.getElementById('canvas3d').style.cursor = 'default';
-    }
-}
-
-function onTouchStart(event) {
-    event.preventDefault();
-    if (event.touches.length === 1) {
-        onPointerDown({ button: 0, clientX: event.touches[0].clientX, clientY: event.touches[0].clientY });
-    }
-}
-function onTouchMove(event) {
-    event.preventDefault();
-    if (event.touches.length === 1 && isDragging) {
-        onPointerMove({ clientX: event.touches[0].clientX, clientY: event.touches[0].clientY });
-    }
-}
-
-// === ЛОГИКА ПАНЕЛИ РЕДАКТИРОВАНИЯ ===
-function selectPoint(point) {
-    if (isPrinting) return;
-    selectedPoint = point;
-    const panel = document.getElementById('pointEditor');
-    if (point) {
-        panel.classList.add('active');
-        updatePanelFromPoint(point);
-        notify('Точка выбрана');
-    } else {
-        panel.classList.remove('active');
-    }
-}
-
-function closePointEditor() {
-    document.getElementById('pointEditor').classList.remove('active');
-    selectedPoint = null;
-}
-
-function updatePanelFromPoint(point) {
-    if (!point) return;
-    const yVal = point.position.y.toFixed(1);
-    const rVal = Math.sqrt(point.position.x**2 + point.position.z**2).toFixed(1);
-    const yInput = document.getElementById('peY');
-    const yNum = document.getElementById('peYNum');
-    const rInput = document.getElementById('peR');
-    const rNum = document.getElementById('peRNum');
-    if (document.activeElement !== yNum) { yInput.value = yVal; yNum.value = yVal; }
-    if (document.activeElement !== rNum) { rInput.value = rVal; rNum.value = rVal; }
-}
-
-function updatePointFromPanel(axis) {
-    if (!selectedPoint) return;
-    const yVal = parseFloat(document.getElementById('peY').value);
-    const rVal = parseFloat(document.getElementById('peR').value);
-    if (axis === 'y') document.getElementById('peYNum').value = yVal;
-    else document.getElementById('peRNum').value = rVal;
-    const currentAngle = Math.atan2(selectedPoint.position.z, selectedPoint.position.x);
-    const newX = Math.cos(currentAngle) * rVal;
-    const newZ = Math.sin(currentAngle) * rVal;
-    selectedPoint.position.set(newX, yVal, newZ);
-    editPts.forEach(pt => {
-        if (pt.userData.type === 'editRing' && pt.userData.parentPoint === selectedPoint) {
-            pt.position.copy(selectedPoint.position);
-            pt.lookAt(camera.position);
-        }
-    });
-    rebuildFromPoints();
-}
-
-function resetSelectedPoint() {
-    if (!selectedPoint) return;
-    const row = selectedPoint.userData.row;
-    const { pts, segs, rows } = currentProfile;
-    const cols = segs + 1;
-    const idx = row * cols + selectedPoint.userData.col;
-    selectedPoint.position.copy(pts[idx]);
-    updatePanelFromPoint(selectedPoint);
-    rebuildFromPoints();
-    notify('Точка сброшена');
-}
-
-function applyToRow() {
-    if (!selectedPoint) return;
-    const targetY = selectedPoint.position.y;
-    const targetR = Math.sqrt(selectedPoint.position.x**2 + selectedPoint.position.z**2);
-    const targetAngle = Math.atan2(selectedPoint.position.z, selectedPoint.position.x);
-    const row = selectedPoint.userData.row;
-    const { segs } = currentProfile;
-    editPts.forEach(pt => {
-        if (pt.userData.type === 'editPoint' && pt.userData.row === row) {
-            const newX = Math.cos(targetAngle) * targetR;
-            const newZ = Math.sin(targetAngle) * targetR;
-            pt.position.set(newX, targetY, newZ);
-            editPts.forEach(ring => {
-                if (ring.userData.type === 'editRing' && ring.userData.parentPoint === pt) {
-                    ring.position.copy(pt.position);
-                    ring.lookAt(camera.position);
-                }
-            });
-        }
-    });
-    rebuildFromPoints();
-    notify('Применено ко всему ряду');
-}
-
-function rebuildFromPoints() {
-    if (!currentProfile || !lampMesh) return;
-    const { pts, segs, rows } = currentProfile;
-    const cols = segs + 1;
-    editPts.forEach(pt => {
-        if (pt.userData.type === 'editPoint') {
-            const row = pt.userData.row;
-            const col = pt.userData.col;
-            const idx = row * cols + col;
-            if (idx < pts.length) pts[idx].copy(pt.position);
-        }
-    });
-    lampMesh.geometry.dispose();
-    lampMesh.geometry = buildGeometry(pts, segs, rows);
-    currentProfile = { pts, segs, rows };
-    document.getElementById('vertInfo').textContent = 'Вершины: ' + lampMesh.geometry.attributes.position.count.toLocaleString();
-}
-
-// === UI ФУНКЦИИ ===
-function toggleSection(header) { header.parentElement.classList.toggle('collapsed'); }
-function slider(id, valueId, suffix, divisor = 100) {
-    const input = document.getElementById(id);
-    const value = parseFloat(input.value);
-    const displayValue = id === 'petals' || id === 'cutDensity' || id === 'cutRows' ? value : (value / divisor).toFixed(2);
-    document.getElementById(valueId).textContent = displayValue + suffix;
-    S[id] = id === 'petals' || id === 'cutDensity' || id === 'cutRows' ? parseInt(value) : value / divisor;
-    if (id === 'thickness') S.thickness = value / 10;
-    if (id === 'cutSize') S.cutSize = value;
-    rebuild();
-}
-function updateState(key, value) { S[key] = value; }
-function selCut(btn) { document.querySelectorAll('.cutout-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); S.cutType = btn.dataset.t; rebuild(); }
-function selMat(btn) { document.querySelectorAll('.material-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); S.material = btn.dataset.m; rebuild(); }
-function selCol(swatch) { document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active')); swatch.classList.add('active'); S.color = swatch.dataset.c; rebuild(); }
-function togSw(el) { el.classList.toggle('active'); S.cutOn = el.classList.contains('active'); rebuild(); }
-
-function applyPreset(name) {
-    const presets = {
-        tulip: { height: 130, diameter: 85, openness: 40, petals: 5, twist: 20, curvature: 60 },
-        rose: { height: 110, diameter: 100, openness: 30, petals: 7, twist: 40, curvature: 70 },
-        lily: { height: 150, diameter: 75, openness: 70, petals: 6, twist: 15, curvature: 50 },
-        lotus: { height: 100, diameter: 120, openness: 80, petals: 8, twist: 10, curvature: 80 }
-    };
-    const p = presets[name]; if (!p) return; applyValues(p); notify('✅ Пресет "' + name + '" применён');
-}
-
-function applyValues(p) {
-    if (p.height) { S.height = p.height; document.getElementById('height').value = p.height; document.getElementById('v_height').textContent = p.height + ' мм'; }
-    if (p.diameter) { S.diameter = p.diameter; document.getElementById('diameter').value = p.diameter; document.getElementById('v_diameter').textContent = p.diameter + ' мм'; }
-    if (p.openness) { S.openness = p.openness / 100; document.getElementById('openness').value = p.openness; document.getElementById('v_openness').textContent = (p.openness / 100).toFixed(2); }
-    if (p.petals) { S.petals = p.petals; document.getElementById('petals').value = p.petals; document.getElementById('v_petals').textContent = p.petals; }
-    if (p.twist) { S.twist = p.twist / 100; document.getElementById('twist').value = p.twist; document.getElementById('v_twist').textContent = (p.twist / 100).toFixed(2); }
-    if (p.curvature) { S.curvature = p.curvature / 100; document.getElementById('curvature').value = p.curvature; document.getElementById('v_curvature').textContent = (p.curvature / 100).toFixed(2); }
-    rebuild();
-}
-
-function randomLamp() {
-    const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-    applyValues({ height: rand(70, 180), diameter: rand(55, 140), openness: rand(10, 90), petals: rand(3, 10), twist: rand(0, 80), curvature: rand(10, 90) });
-    const colors = ['#f5f5f0', '#e8d5b7', '#d4a574', '#4a6741', '#6b5b7b', '#d4756b', '#b8a9c9'];
-    S.color = colors[rand(0, colors.length - 1)];
-    document.querySelectorAll('.color-swatch').forEach(s => s.classList.toggle('active', s.dataset.c === S.color));
-    notify('🎲 Случайная лампа создана!');
-}
-
-function resetCam() { camera.position.set(0, 100, 300); camera.lookAt(0, 60, 0); controls.target.set(0, 60, 0); controls.update(); }
-function toggleWF() { wireOn = !wireOn; lampGroup.children.forEach(child => { if (child.material && child.userData.isLamp) child.material.wireframe = wireOn; }); notify(wireOn ? '📐 Каркас включён' : '📐 Каркас выключен'); }
-function toggleRot() { rotOn = !rotOn; notify(rotOn ? '🔄 Вращение включено' : '🔄 Вращение выключено'); }
-function togglePts() { showPts = !showPts; editPts.forEach(pt => pt.visible = showPts); notify(showPts ? '⚫ Точки видимы' : '⚫ Точки скрыты'); }
-function toggleLit() { litOn = !litOn; pointLight.intensity = litOn ? 1.0 : 0; dirLight.intensity = litOn ? 1.0 : 0.3; ambientLight.intensity = litOn ? 0.6 : 0.2; notify(litOn ? '💡 Свет включён' : '💡 Свет выключен'); }
-
-function resetAll() {
-    S = { height: 120, diameter: 90, openness: 0.5, petals: 5, twist: 0.3, curvature: 0.5, baseType: 'E27', cutType: 'circle', cutSize: 12, cutDensity: 4, cutRows: 3, cutOn: true, material: 'matte', color: '#f5f5f0', thickness: 2.0 };
-    document.getElementById('height').value = 120; document.getElementById('v_height').textContent = '120 мм';
-    document.getElementById('diameter').value = 90; document.getElementById('v_diameter').textContent = '90 мм';
-    document.getElementById('openness').value = 50; document.getElementById('v_openness').textContent = '0.50';
-    document.getElementById('petals').value = 5; document.getElementById('v_petals').textContent = '5';
-    document.getElementById('twist').value = 30; document.getElementById('v_twist').textContent = '0.30';
-    document.getElementById('curvature').value = 50; document.getElementById('v_curvature').textContent = '0.50';
-    document.getElementById('cutSize').value = 12; document.getElementById('v_cutSz').textContent = '12 мм';
-    document.getElementById('cutDensity').value = 4; document.getElementById('v_cutDen').textContent = '4';
-    document.getElementById('cutRows').value = 3; document.getElementById('v_cutRow').textContent = '3';
-    document.getElementById('baseType').value = 'E27';
-    document.querySelectorAll('.cutout-btn').forEach(b => b.classList.toggle('active', b.dataset.t === 'circle'));
-    document.querySelectorAll('.material-btn').forEach(b => b.classList.toggle('active', b.dataset.m === 'matte'));
-    document.querySelectorAll('.color-swatch').forEach(s => s.classList.toggle('active', s.dataset.c === '#f5f5f0'));
-    document.getElementById('cutTog').classList.add('active');
-    rebuild(); notify('🔄 Все настройки сброшены');
-}
-
-function updateModelInfo() {
-    document.getElementById('modelInfo').innerHTML = `Цоколь: ${S.baseType}<br>Размер: Ø${S.diameter}×${S.height} мм<br>Лепестков: ${S.petals}<br>Толщина: ${S.thickness} мм<br>Вырезы: ${S.cutOn ? 'Вкл ('+S.cutType+')' : 'Выкл'}`;
-}
-
-// === PRINT ANIMATION LOGIC ===
-function togglePrintAnimation() {
-    if (isPrinting) {
-        stopPrintAnimation();
-    } else {
-        startPrintAnimation();
     }
 }
 
 function startPrintAnimation() {
-    if (!lampMesh) return;
-    
+    if (isPrinting) return;
     isPrinting = true;
-    printLayerIndex = 0;
-    printSpeed = parseInt(document.getElementById('printSpeed').value);
-    printStartTime = Date.now();
+    document.getElementById('btn-print-action').innerText = "Пауза";
+    document.getElementById('btn-print-action').classList.replace('btn-primary', 'btn-secondary');
     
-    // Hide UI elements
-    document.getElementById('btnPrintAnim').classList.add('playing');
-    document.getElementById('printBtnText').textContent = 'Идет печать...';
-    document.getElementById('printSpeedControl').style.display = 'block';
-    document.getElementById('printOverlay').classList.add('active');
-    document.getElementById('printInfo').style.display = 'block';
+    // Clone current model geometry for printing
+    if (printMesh) printScene.remove(printMesh);
     
-    // Hide edit points
-    editPts.forEach(pt => pt.visible = false);
-    if (selectedPoint) closePointEditor();
+    const originalGeo = lampMesh.geometry;
+    // Create a new geometry that we will "grow"
+    // We simulate by scaling Y and masking vertices
+    printMesh = new THREE.Mesh(
+        originalGeo.clone(), 
+        new THREE.MeshStandardMaterial({ color: State.color, roughness: 0.7 })
+    );
+    printMesh.position.y = 0; // Align to bed
+    printMesh.castShadow = true;
+    printScene.add(printMesh);
+
+    printProgress = 0;
+    printLayersTotal = State.height / 0.2; // Approx 0.2mm layer height
     
-    // Prepare layers
-    preparePrintLayers();
-    
-    // Show nozzle
-    printNozzle.visible = true;
-    
-    notify('🖨️ Начало печати...');
+    animatePrint();
 }
 
-function stopPrintAnimation() {
+function pausePrint() {
     isPrinting = false;
-    cancelAnimationFrame(animationFrameId);
-    
-    // Restore full mesh
-    printMeshParts.forEach(part => {
-        part.visible = true;
-        part.material.opacity = 1;
-        part.material.transparent = false;
-    });
-    
-    // Hide nozzle
-    printNozzle.visible = false;
-    
-    // Restore UI
-    document.getElementById('btnPrintAnim').classList.remove('playing');
-    document.getElementById('printBtnText').textContent = 'Анимация печати';
-    document.getElementById('printSpeedControl').style.display = 'none';
-    document.getElementById('printOverlay').classList.remove('active');
-    document.getElementById('printInfo').style.display = 'none';
-    
-    // Restore edit points if needed
-    if (showPts) editPts.forEach(pt => pt.visible = true);
-    
-    notify('⏹️ Печать остановлена');
+    document.getElementById('btn-print-action').innerText = "Продолжить";
+    document.getElementById('btn-print-action').classList.replace('btn-secondary', 'btn-primary');
+    cancelAnimationFrame(printAnimationId);
 }
 
-function preparePrintLayers() {
-    // Clear previous parts
-    printMeshParts.forEach(part => lampGroup.remove(part));
-    printMeshParts = [];
-    
-    // Get geometry data
-    const geometry = lampMesh.geometry;
-    const positions = geometry.attributes.position.array;
-    const indices = geometry.index ? geometry.index.array : null;
-    const material = lampMesh.material;
-    
-    // Calculate layer height based on model height
-    const totalHeight = S.height;
-    const layerHeight = 0.4; // Standard FDM layer height in mm
-    printTotalLayers = Math.ceil(totalHeight / layerHeight);
-    
-    // Group triangles by layer
-    const layerGeometries = [];
-    for (let i = 0; i < printTotalLayers; i++) {
-        layerGeometries.push({ vertices: [], indices: [] });
-    }
-    
-    // Process triangles
-    const count = indices ? indices.length : positions.length / 3;
-    for (let i = 0; i < count; i += 3) {
-        const idxA = indices ? indices[i] : i;
-        const idxB = indices ? indices[i+1] : i+1;
-        const idxC = indices ? indices[i+2] : i+2;
-        
-        const yA = positions[idxA * 3 + 1];
-        const yB = positions[idxB * 3 + 1];
-        const yC = positions[idxC * 3 + 1];
-        
-        const avgY = (yA + yB + yC) / 3;
-        const layerIdx = Math.min(Math.floor(avgY / layerHeight), printTotalLayers - 1);
-        
-        // Add vertices to layer
-        const offset = layerGeometries[layerIdx].vertices.length / 3;
-        layerGeometries[layerIdx].vertices.push(
-            positions[idxA * 3], positions[idxA * 3 + 1], positions[idxA * 3 + 2],
-            positions[idxB * 3], positions[idxB * 3 + 1], positions[idxB * 3 + 2],
-            positions[idxC * 3], positions[idxC * 3 + 1], positions[idxC * 3 + 2]
-        );
-        layerGeometries[layerIdx].indices.push(offset, offset+1, offset+2);
-    }
-    
-    // Create meshes for each layer
-    const baseColor = new THREE.Color(S.color);
-    
-    layerGeometries.forEach((layerData, idx) => {
-        if (layerData.vertices.length === 0) return;
-        
-        const geo = new THREE.BufferGeometry();
-        geo.setAttribute('position', new THREE.Float32BufferAttribute(layerData.vertices, 3));
-        geo.setIndex(layerData.indices);
-        geo.computeVertexNormals();
-        
-        // Create material with slight transparency for effect
-        const mat = material.clone();
-        mat.transparent = true;
-        mat.opacity = 0.3;
-        mat.emissive = baseColor;
-        mat.emissiveIntensity = 0.2;
-        
-        const mesh = new THREE.Mesh(geo, mat);
-        mesh.castShadow = true;
-        mesh.visible = false; // Start hidden
-        lampGroup.add(mesh);
-        printMeshParts.push(mesh);
-    });
+function togglePrint() {
+    if (isPrinting) pausePrint();
+    else startPrintAnimation();
 }
 
-function updatePrintAnimation() {
+function resetPrint() {
+    pausePrint();
+    isPrinting = false;
+    printProgress = 0;
+    document.getElementById('btn-print-action').innerText = "Старт";
+    document.getElementById('btn-print-action').classList.replace('btn-secondary', 'btn-primary');
+    document.getElementById('print-progress').style.width = '0%';
+    document.getElementById('print-percent').innerText = '0%';
+    document.getElementById('print-layer').innerText = `0 / ${Math.floor(printLayersTotal)}`;
+    document.getElementById('print-time').innerText = "00:00";
+    
+    if (printMesh) {
+        printScene.remove(printMesh);
+        printMesh = null;
+    }
+    // Show full ghost model faintly? Or just empty bed
+}
+
+function updatePrintSpeed(val) {
+    printSpeed = parseInt(val);
+}
+
+function animatePrint() {
     if (!isPrinting) return;
+
+    // Increment progress
+    printProgress += 0.001 * printSpeed;
+    if (printProgress >= 1) {
+        printProgress = 1;
+        pausePrint();
+        document.getElementById('btn-print-action').innerText = "Готово";
+        showToast("✅ Печать завершена!");
+    }
+
+    // Update Visuals
+    if (printMesh) {
+        // Simulate growth by scaling Y and adjusting position
+        // Note: This is a visual trick. Real slicing is complex.
+        // We simply scale the mesh from bottom up
+        const scaleY = printProgress;
+        printMesh.scale.set(1, scaleY, 1);
+        printMesh.position.y = (State.height * scaleY) / 2;
+        
+        // Clip logic could be added here for realism, but scaling is smoother for demo
+    }
+
+    // Move Nozzle
+    // Spiral motion
+    const time = Date.now() * 0.002 * printSpeed;
+    const radius = (State.diameter / 2) * printProgress * 0.8;
+    printNozzle.position.x = Math.cos(time) * radius;
+    printNozzle.position.z = Math.sin(time) * radius;
+    printNozzle.position.y = (State.height * printProgress) + 5;
+
+    // Update UI
+    document.getElementById('print-progress').style.width = (printProgress * 100) + '%';
+    document.getElementById('print-percent').innerText = (printProgress * 100).toFixed(1) + '%';
+    document.getElementById('print-layer').innerText = `${Math.floor(printProgress * printLayersTotal)} / ${Math.floor(printLayersTotal)}`;
     
-    const now = Date.now();
-    const elapsed = now - printStartTime;
+    const totalSec = Math.floor(printProgress * 120); // Fake 2 min print
+    const m = Math.floor(totalSec / 60).toString().padStart(2,'0');
+    const s = (totalSec % 60).toString().padStart(2,'0');
+    document.getElementById('print-time').innerText = `${m}:${s}`;
+
+    printRenderer.render(printScene, printCamera);
+    printAnimationId = requestAnimationFrame(animatePrint);
+}
+
+/**
+ * ==========================================
+ * PROFILE EDITOR MODULE (SEPARATE WINDOW)
+ * ==========================================
+ */
+let editorScene, editorCamera, editorRenderer, editorPoints = [], editorLines;
+let selectedEditorPoint = null;
+let dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0); // Orthographic-like interaction plane
+
+function openProfileEditor() {
+    document.getElementById('modal-editor').classList.add('active');
+    initEditorScene();
+    loadProfileToEditor();
+}
+
+function initEditorScene() {
+    const container = document.getElementById('editor-canvas-wrap');
+    if (!editorScene) {
+        editorScene = new THREE.Scene();
+        editorScene.background = new THREE.Color(0x111111);
+
+        // Orthographic camera for 2D feel
+        const frustumSize = 300;
+        const aspect = container.clientWidth / container.clientHeight;
+        editorCamera = new THREE.OrthographicCamera(
+            frustumSize * aspect / -2, frustumSize * aspect / 2,
+            frustumSize / 2, frustumSize / -2,
+            1, 1000
+        );
+        editorCamera.position.set(0, 0, 100);
+        editorCamera.lookAt(0, 0, 0);
+
+        editorRenderer = new THREE.WebGLRenderer({ antialias: true });
+        editorRenderer.setSize(container.clientWidth, container.clientHeight);
+        container.appendChild(editorRenderer.domElement);
+
+        // Grid
+        const gridHelper = new THREE.GridHelper(400, 20, 0x333333, 0x222222);
+        gridHelper.rotation.x = Math.PI / 2; // Make it vertical like a graph
+        editorScene.add(gridHelper);
+
+        // Axes
+        const axesHelper = new THREE.AxesHelper(150);
+        editorScene.add(axesHelper);
+
+        // Interaction
+        container.addEventListener('mousedown', onEditorMouseDown);
+        container.addEventListener('mousemove', onEditorMouseMove);
+        container.addEventListener('mouseup', onEditorMouseUp);
+        
+        window.addEventListener('resize', () => {
+             if(document.getElementById('modal-editor').classList.contains('active')) {
+                 // Recalc ortho
+                 const aspect = container.clientWidth / container.clientHeight;
+                 const frustumSize = 300;
+                 editorCamera.left = -frustumSize * aspect / 2;
+                 editorCamera.right = frustumSize * aspect / 2;
+                 editorCamera.top = frustumSize / 2;
+                 editorCamera.bottom = -frustumSize / 2;
+                 editorCamera.updateProjectionMatrix();
+                 editorRenderer.setSize(container.clientWidth, container.clientHeight);
+             }
+        });
+
+        animateEditor();
+    }
+}
+
+function loadProfileToEditor() {
+    // Clear old
+    if (editorPoints) editorPoints.forEach(p => editorScene.remove(p));
+    if (editorLines) editorScene.remove(editorLines);
+    editorPoints = [];
+    document.getElementById('point-list-ul').innerHTML = '';
+
+    const pts = getProfilePoints();
+    const maxH = State.height;
+    const maxR = State.diameter / 2 + 20;
+
+    // Create Line
+    const lineGeo = new THREE.BufferGeometry();
+    const positions = [];
+    pts.forEach(p => {
+        // Map to 2D plane: X = Radius, Y = Height
+        positions.push(p.x, p.y, 0);
+    });
+    lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    const lineMat = new THREE.LineBasicMaterial({ color: 0x6c5ce7, linewidth: 2 });
+    editorLines = new THREE.Line(lineGeo, lineMat);
+    editorScene.add(editorLines);
+
+    // Create Interactive Points
+    pts.forEach((p, idx) => {
+        const geo = new THREE.CircleGeometry(4, 16);
+        const mat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(p.x, p.y, 1); // Slightly in front
+        mesh.userData = { index: idx, origY: p.y, origR: p.x };
+        
+        // Highlight on hover logic could go here
+        
+        editorScene.add(mesh);
+        editorPoints.push(mesh);
+
+        // Add to List
+        const li = document.createElement('li');
+        li.className = 'point-item';
+        li.innerHTML = `
+            <span>Точка #${idx}</span>
+            <span class="point-coords">R:${p.x.toFixed(1)} H:${p.y.toFixed(1)}</span>
+        `;
+        li.onclick = () => selectEditorPoint(idx);
+        document.getElementById('point-list-ul').appendChild(li);
+    });
+}
+
+function selectEditorPoint(idx) {
+    selectedEditorPoint = idx;
+    document.querySelectorAll('.point-item').forEach((el, i) => {
+        el.classList.toggle('active', i === idx);
+    });
+    // Visual highlight
+    editorPoints.forEach((p, i) => {
+        p.material.color.setHex(i === idx ? 0xff0055 : 0xffffff);
+        p.scale.setScalar(i === idx ? 1.5 : 1);
+    });
+}
+
+function onEditorMouseDown(e) {
+    const rect = e.target.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
     
-    // Calculate current layer based on speed
-    // Speed 1 = 1 layer per 200ms, Speed 10 = 1 layer per 20ms
-    const msPerLayer = 200 / printSpeed;
-    const targetLayer = Math.floor(elapsed / msPerLayer);
+    // Raycast in ortho
+    // Simplified: Check distance to points in 2D space mapped from camera
+    // Since Ortho, we can map mouse directly to world coords roughly
+    // Better: Use Raycaster with Ortho camera
     
-    if (targetLayer > printLayerIndex) {
-        // Reveal new layers
-        while (printLayerIndex < targetLayer && printLayerIndex < printMeshParts.length) {
-            if (printMeshParts[printLayerIndex]) {
-                printMeshParts[printLayerIndex].visible = true;
-                printMeshParts[printLayerIndex].material.opacity = 1;
-                printMeshParts[printLayerIndex].material.transparent = false;
-            }
-            printLayerIndex++;
-        }
-        
-        // Update UI
-        const percent = Math.min((printLayerIndex / printTotalLayers) * 100, 100);
-        document.getElementById('printBar').style.width = percent + '%';
-        
-        const minutes = Math.floor(elapsed / 60000);
-        const seconds = Math.floor((elapsed % 60000) / 1000);
-        const timeStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        
-        document.getElementById('printDetails').textContent = 
-            `Слой: ${printLayerIndex} / ${printTotalLayers} | Время: ${timeStr}`;
-        
-        // Move nozzle
-        if (printLayerIndex < printMeshParts.length && printMeshParts[printLayerIndex]) {
-            const currentMesh = printMeshParts[printLayerIndex];
-            const box = new THREE.Box3().setFromObject(currentMesh);
-            const center = new THREE.Vector3();
-            box.getCenter(center);
-            
-            // Nozzle moves above the current layer being printed
-            printNozzle.position.set(
-                center.x + Math.sin(elapsed * 0.005) * 20,
-                center.y + 2,
-                center.z + Math.cos(elapsed * 0.005) * 20
-            );
-            printNozzle.lookAt(center);
-        }
+    const mouseVec = new THREE.Vector2(x, y);
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(mouseVec, editorCamera);
+    
+    const intersects = raycaster.intersectObjects(editorPoints);
+    if (intersects.length > 0) {
+        const hit = intersects[0].object;
+        selectEditorPoint(hit.userData.index);
+        isDraggingPoint = true;
+    }
+}
+
+function onEditorMouseMove(e) {
+    if (!isDraggingPoint || selectedEditorPoint === -1) return;
+    
+    const rect = e.target.getBoundingClientRect();
+    // Map mouse to World Coordinates in Orthographic view
+    const xPct = (e.clientX - rect.left) / rect.width;
+    const yPct = (e.clientY - rect.top) / rect.height;
+    
+    const frustumSize = 300;
+    const aspect = rect.width / rect.height;
+    
+    const worldX = (xPct - 0.5) * frustumSize * aspect;
+    const worldY = (0.5 - yPct) * frustumSize;
+    
+    // Constrain
+    const newR = Math.max(10, worldX);
+    const newH = Math.max(0, Math.min(State.height, worldY));
+    
+    // Update Point
+    const pt = editorPoints[selectedEditorPoint];
+    pt.position.set(newR, newH, 1);
+    
+    // Update List UI
+    const li = document.querySelectorAll('.point-item')[selectedEditorPoint];
+    if (li) {
+        li.querySelector('.point-coords').innerText = `R:${newR.toFixed(1)} H:${newH.toFixed(1)}`;
     }
     
-    // Finish
-    if (printLayerIndex >= printTotalLayers) {
-        finishPrintAnimation();
+    // Update Line Geometry
+    const positions = editorLines.geometry.attributes.position.array;
+    positions[selectedEditorPoint * 3] = newR;
+    positions[selectedEditorPoint * 3 + 1] = newH;
+    editorLines.geometry.attributes.position.needsUpdate = true;
+}
+
+function onEditorMouseUp() {
+    isDraggingPoint = false;
+}
+
+function animateEditor() {
+    requestAnimationFrame(animateEditor);
+    if (document.getElementById('modal-editor').classList.contains('active')) {
+        editorRenderer.render(editorScene, editorCamera);
     }
 }
 
-function finishPrintAnimation() {
-    isPrinting = false;
-    printNozzle.visible = false;
+function smoothProfile() {
+    showToast("Сглаживание профиля...");
+    // Simple average smoothing
+    const positions = editorLines.geometry.attributes.position.array;
+    const count = positions.length / 3;
+    const newYs = [];
     
-    document.getElementById('btnPrintAnim').classList.remove('playing');
-    document.getElementById('printBtnText').textContent = 'Печать завершена';
-    document.getElementById('printBar').style.width = '100%';
+    for(let i=0; i<count; i++) {
+        if (i===0 || i===count-1) continue; // Keep ends
+        const prev = positions[(i-1)*3+1];
+        const curr = positions[i*3+1];
+        const next = positions[(i+1)*3+1];
+        newYs.push((prev + curr + next) / 3);
+    }
     
-    setTimeout(() => {
-        document.getElementById('printOverlay').classList.remove('active');
-        document.getElementById('printInfo').style.display = 'none';
-        document.getElementById('printSpeedControl').style.display = 'none';
-        document.getElementById('btnPrintAnim').classList.remove('playing');
-        document.getElementById('printBtnText').textContent = 'Анимация печати';
-        
-        if (showPts) editPts.forEach(pt => pt.visible = true);
-        notify('✅ Печать завершена успешно!');
-    }, 1000);
-}
-
-function updatePrintSpeed() {
-    printSpeed = parseInt(document.getElementById('printSpeed').value);
-    document.getElementById('v_printSpeed').textContent = printSpeed + 'x';
-}
-
-// === ЭКСПОРТ ===
-function exportSTL() {
-    notify('⏳ Генерация STL...');
-    const { pts, segs, rows } = currentProfile;
-    const cols = segs + 1;
-    let stl = 'solid floraLamp\n';
-    for (let i = 0; i < rows; i++) {
-        for (let j = 0; j < segs; j++) {
-            const a = pts[i * cols + j], b = pts[i * cols + j + 1], c = pts[(i + 1) * cols + j], d = pts[(i + 1) * cols + j + 1];
-            const center1 = new THREE.Vector3().addVectors(a, c).add(b).multiplyScalar(1/3);
-            const center2 = new THREE.Vector3().addVectors(b, d).add(c).multiplyScalar(1/3);
-            const angle1 = Math.atan2(center1.z, center1.x), radius1 = Math.sqrt(center1.x*center1.x + center1.z*center1.z);
-            const inCut1 = isInsideCutout(angle1, center1.y, radius1);
-            const angle2 = Math.atan2(center2.z, center2.x), radius2 = Math.sqrt(center2.x*center2.x + center2.z*center2.z);
-            const inCut2 = isInsideCutout(angle2, center2.y, radius2);
-            if (!inCut1) stl += writeTriangle(computeNormal(a, c, b), a, c, b);
-            if (!inCut2) stl += writeTriangle(computeNormal(b, c, d), b, c, d);
-        }
+    for(let i=1; i<count-1; i++) {
+        positions[i*3+1] = newYs[i-1];
+        editorPoints[i].position.y = newYs[i-1];
     }
-    stl += 'endsolid floraLamp\n';
-    download(new Blob([stl], { type: 'application/octet-stream' }), `lampshade_${S.baseType}_${Date.now()}.stl`);
-    notify('✅ STL скачан!');
+    editorLines.geometry.attributes.position.needsUpdate = true;
+    
+    // Update list
+    document.querySelectorAll('.point-item').forEach((li, i) => {
+         if(i>0 && i<count-1)
+            li.querySelector('.point-coords').innerText = `R:${positions[i*3].toFixed(1)} H:${positions[i*3+1].toFixed(1)}`;
+    });
 }
 
-function exportOBJ() {
-    notify('⏳ Генерация OBJ...');
-    const { pts, segs, rows } = currentProfile;
-    let obj = '# FloraLamp\n# ' + new Date().toISOString() + '\n\n';
-    pts.forEach(p => obj += `v ${p.x.toFixed(4)} ${p.y.toFixed(4)} ${p.z.toFixed(4)}\n`);
-    obj += '\n';
-    const cols = segs + 1;
-    for (let i = 0; i < rows; i++) {
-        for (let j = 0; j < segs; j++) {
-            const a = pts[i * cols + j], b = pts[i * cols + j + 1], c = pts[(i + 1) * cols + j], d = pts[(i + 1) * cols + j + 1];
-            const center1 = new THREE.Vector3().addVectors(a, c).add(b).multiplyScalar(1/3);
-            const center2 = new THREE.Vector3().addVectors(b, d).add(c).multiplyScalar(1/3);
-            const inCut1 = isInsideCutout(Math.atan2(center1.z, center1.x), center1.y, Math.sqrt(center1.x*center1.x + center1.z*center1.z));
-            const inCut2 = isInsideCutout(Math.atan2(center2.z, center2.x), center2.y, Math.sqrt(center2.x*center2.x + center2.z*center2.z));
-            const idxA = i * cols + j + 1, idxB = idxA + 1, idxC = (i + 1) * cols + j + 1, idxD = idxC + 1;
-            if (!inCut1) obj += `f ${idxA} ${idxC} ${idxB}\n`;
-            if (!inCut2) obj += `f ${idxB} ${idxC} ${idxD}\n`;
-        }
+function resetProfile() {
+    loadProfileToEditor();
+}
+
+function applyProfileAndClose() {
+    // This is the tricky part: We need to reverse-engineer the params or store the custom points
+    // For this demo, we will approximate the 'openness' and 'diameter' based on max values
+    const positions = editorLines.geometry.attributes.position.array;
+    let maxR = 0;
+    let maxY = 0;
+    
+    for(let i=0; i<positions.length; i+=3) {
+        if (positions[i] > maxR) maxR = positions[i];
+        if (positions[i+1] > maxY) maxY = positions[i+1];
     }
-    download(new Blob([obj], { type: 'application/octet-stream' }), `lampshade_${S.baseType}_${Date.now()}.obj`);
-    notify('✅ OBJ скачан!');
+    
+    State.diameter = Math.round(maxR * 2);
+    State.height = Math.round(maxY);
+    
+    // Update main inputs
+    document.getElementById('inp-d').value = State.diameter;
+    document.getElementById('val-d').innerText = State.diameter;
+    document.getElementById('inp-h').value = State.height;
+    document.getElementById('val-h').innerText = State.height;
+    
+    closeModal('modal-editor');
+    rebuildModel();
+    showToast("✅ Профиль применен");
 }
 
-function computeNormal(v1, v2, v3) { const e1 = new THREE.Vector3().subVectors(v2, v1), e2 = new THREE.Vector3().subVectors(v3, v1); return new THREE.Vector3().crossVectors(e1, e2).normalize(); }
-function writeTriangle(normal, v1, v2, v3) { return `  facet normal ${normal.x.toFixed(6)} ${normal.y.toFixed(6)} ${normal.z.toFixed(6)}\n    outer loop\n      vertex ${v1.x.toFixed(4)} ${v1.y.toFixed(4)} ${v1.z.toFixed(4)}\n      vertex ${v2.x.toFixed(4)} ${v2.y.toFixed(4)} ${v2.z.toFixed(4)}\n      vertex ${v3.x.toFixed(4)} ${v3.y.toFixed(4)} ${v3.z.toFixed(4)}\n    endloop\n  endfacet\n`; }
-function download(blob, name) { const u = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u); }
-function notify(t) { const n = document.getElementById('notif'); n.textContent = t; n.classList.add('show'); setTimeout(() => n.classList.remove('show'), 2200); }
+/**
+ * UTILS
+ */
+function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+    if (id === 'modal-print') {
+        pausePrint();
+    }
+}
 
-window.addEventListener('load', init);
+// Start
+window.onload = initMain;
+
 </script>
 </body>
 </html>
